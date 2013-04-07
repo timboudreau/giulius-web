@@ -15,7 +15,6 @@
         <module>embedded-jetty</module>
         <module>giulius-servlet</module>
         <module>jackson</module>
-        <module>selenium</module>
         <module>statistics</module>
     </modules>
     <repositories>
