@@ -4,3 +4,9 @@
 *.jar
 *.war
 *.ear
+*.orig
+*.iml
+.idea/
+target/
+.classpath/
+.project/
