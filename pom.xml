@@ -8,7 +8,7 @@
         <artifactId>mastfrog-parent</artifactId>
         <version>1.3.6-SNAPSHOT</version>
     </parent>
-    <name>Giulius Parent</name>
+    <name>Giulius Web Parent</name>
     <description>Guice + Configuration tools</description>
     <packaging>pom</packaging>
     <modules>
