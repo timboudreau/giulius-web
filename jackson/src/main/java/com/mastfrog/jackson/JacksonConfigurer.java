@@ -26,7 +26,8 @@ package com.mastfrog.jackson;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Bind this interface if you need to customize Jackson configuration.
+ * Implement this interface and register it using &#064;ServiceProvider
+ * to allow it to contribute configuration to Jackson on initialization.
  *
  * @author Tim Boudreau
  */
