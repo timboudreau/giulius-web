@@ -177,7 +177,7 @@ public final class WebServer {
                 if (res.match(uriInContext)) {
                     return new org.eclipse.jetty.util.resource.Resource() {
                         @Override
-                        public void release() {
+                        public void close() {
                             //do nothing
                         }
 
@@ -224,11 +224,6 @@ public final class WebServer {
                         @Override
                         public InputStream getInputStream() throws IOException {
                             return res.toStream();
-                        }
-
-                        @Override
-                        public OutputStream getOutputStream() throws IOException, SecurityException {
-                            throw new UnsupportedOperationException("Not supported.");
                         }
 
                         @Override
