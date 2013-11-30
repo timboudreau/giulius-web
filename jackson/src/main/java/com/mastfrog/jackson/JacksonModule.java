@@ -40,10 +40,10 @@ public final class JacksonModule extends AbstractModule {
             if (mapper == null) {
                 synchronized (this) {
                     if (mapper == null) {
-                    }
-                    mapper = new ObjectMapper();
-                    for (JacksonConfigurer config : configurers) {
-                        mapper = config.configure(mapper);
+                        mapper = new ObjectMapper();
+                        for (JacksonConfigurer config : configurers) {
+                            mapper = config.configure(mapper);
+                        }
                     }
                 }
             }
