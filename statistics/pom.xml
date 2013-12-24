@@ -6,6 +6,7 @@
         <groupId>com.mastfrog</groupId>
         <artifactId>mastfrog-parent</artifactId>
         <version>1.4.0</version>
+        <relativePath/>
     </parent>
     <artifactId>statistics</artifactId>
     <name>Statistics (JMX-AOP)</name>
