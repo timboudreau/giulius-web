@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License
  *
  * Copyright 2013 Tim Boudreau.
@@ -26,8 +26,6 @@ package com.mastfrog.statistics;
 import com.google.inject.Provider;
 import com.mastfrog.settings.MutableSettings;
 import com.mastfrog.settings.Settings;
-import com.mastfrog.settings.SettingsBuilder;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -49,6 +47,7 @@ import javax.management.ReflectionException;
  * @author Tim Boudreau
  */
 public class SettingsBean implements javax.management.DynamicMBean {
+
     private final Provider<Settings> settings;
 
     public SettingsBean(Provider<Settings> settings) {
@@ -82,7 +81,6 @@ public class SettingsBean implements javax.management.DynamicMBean {
         Collections.sort(keys);
         for (String key : keys) {
             Attribute attr = new Attribute(key, settings.get().getString(key));
-
             l.add(attr);
         }
         return l;
@@ -100,17 +98,7 @@ public class SettingsBean implements javax.management.DynamicMBean {
 
     @Override
     public MBeanInfo getMBeanInfo() {
-        Settings s;
-        try {
-            s = settings.get();
-        } catch (IllegalStateException ex) {
-            ex.printStackTrace();
-            try {
-                s = new SettingsBuilder().build();
-            } catch (IOException ex1) {
-                throw new AssertionError(ex1); //won't happen, we do no I/O
-            }
-        }
+        Settings s = settings.get();
         List<MBeanAttributeInfo> infos = new ArrayList<>();
         List<String> keys = new ArrayList<>(s.allKeys());
         Collections.sort(keys);

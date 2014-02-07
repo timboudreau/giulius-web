@@ -1,12 +1,13 @@
 package com.mastfrog.statistics;
 
+import com.mastfrog.util.perf.Benchmark;
 import com.google.inject.Inject;
 import com.mastfrog.giulius.Dependencies;
 import com.mastfrog.settings.RefreshInterval;
 import com.mastfrog.settings.Settings;
 import com.mastfrog.settings.SettingsBuilder;
 import com.mastfrog.settings.SettingsRefreshInterval;
-import com.mastfrog.statistics.Benchmark.Kind;
+import com.mastfrog.util.perf.Benchmark.Kind;
 import java.io.IOException;
 import javax.management.MBeanServer;
 import javax.management.ObjectInstance;

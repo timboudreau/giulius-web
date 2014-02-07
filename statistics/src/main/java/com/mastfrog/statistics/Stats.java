@@ -38,6 +38,13 @@ class Stats implements StatsMBean {
     AtomicMaximum longestTime = new AtomicMaximum();
     AtomicLong total = new AtomicLong();
 
+    public void reset() {
+        count.set(0);
+        contention.set(0);
+        longestTime.reset();
+        total.set(0);
+    }
+    
     @Override
     public int getInvocationCount() {
         return count.get();

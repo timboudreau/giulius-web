@@ -35,4 +35,5 @@ public interface StatsMBean {
     public int getCurrentContention();
     public long getTotalTimeSpent();
     public String getName();
+    public void reset();
 }

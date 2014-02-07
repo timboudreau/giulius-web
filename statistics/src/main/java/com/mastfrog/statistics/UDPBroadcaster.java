@@ -28,7 +28,6 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.mastfrog.giulius.ShutdownHookRegistry;
 import com.mastfrog.guicy.annotations.Defaults;
-import com.mastfrog.util.Checks;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -37,7 +36,6 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -85,6 +83,9 @@ public final class UDPBroadcaster {
 
     public void shutdown() {
         try {
+            if (pubThread != null) {
+                pubThread.interrupt();
+            }
             exe.shutdownNow();
         } finally {
             socket.close();
@@ -105,13 +106,17 @@ public final class UDPBroadcaster {
         exe.submit(new Runnable() {
             @Override
             public void run() {
+                pubThread = Thread.currentThread();
                 publishLoop();
             }
         });
     }
 
+    private Thread pubThread;
     private void publishLoop() {
         Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
+        Thread.currentThread().setName("JMX-AOP UDP Publisher Thread");
+        Thread.currentThread().setDaemon(true);
         List<byte[]> bytes = new LinkedList<>();
         ByteBuffer buffer = null;
         while (!exe.isShutdown()) {

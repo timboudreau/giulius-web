@@ -23,13 +23,13 @@
  */
 package com.mastfrog.statistics;
 
+import com.mastfrog.util.perf.Benchmark;
 import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
-import com.google.inject.spi.TypeEncounter;
-import com.google.inject.spi.TypeListener;
+import com.google.inject.util.Providers;
 import com.mastfrog.giulius.ShutdownHookRegistry;
 import com.mastfrog.guicy.annotations.Defaults;
 import com.mastfrog.settings.RefreshInterval;
@@ -40,11 +40,16 @@ import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.InvocationTargetException;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.management.InstanceAlreadyExistsException;
+import javax.management.InstanceNotFoundException;
 import javax.management.MBeanRegistrationException;
 import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
@@ -61,12 +66,13 @@ import org.aopalliance.intercept.MethodInvocation;
  */
 @Defaults("stats.enable.udp=true")
 public final class JmxAopModule extends AbstractModule {
+
     private MBeanServer mbeanServer;
     private UDPBroadcaster broadcaster;
     public static final String ENABLE_UDP = "stats.enable.udp";
     private boolean enableUdp;
 
-    JmxAopModule(Settings settings) {
+    public JmxAopModule(Settings settings) {
         enableUdp = settings.getBoolean(ENABLE_UDP, true);
     }
 
@@ -75,19 +81,8 @@ public final class JmxAopModule extends AbstractModule {
         mbeanServer = ManagementFactory.getPlatformMBeanServer();
         bind(MBeanServer.class).toInstance(mbeanServer);
         Matcher<AnnotatedElement> m = Matchers.annotatedWith(Benchmark.class);
-        binder().bindInterceptor(Matchers.any(), m, new Benchmarker(mbeanServer));
-        for (RefreshInterval r : SettingsRefreshInterval.values()) {
-            try {
-                IntervalsMBean bean = new Intervals(r);
-                ObjectName name = new ObjectName(r.getClass().getName(), "type", r.name());
-                mbeanServer.registerMBean(bean, name);
-            } catch (MBeanRegistrationException | NotCompliantMBeanException | MalformedObjectNameException ex) {
-                Logger.getLogger(JmxAopModule.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (InstanceAlreadyExistsException e) {
-                //do nothing
-            }
-        }
-        bindSettingsBean();
+        binder().bindInterceptor(Matchers.any(), m, new Benchmarker(mbeanServer, binder().getProvider(ShutdownHookRegistry.class)));
+        bind(SettingsBeanBinder.class).asEagerSingleton();
         if (enableUdp) {
             try {
                 bind(UDPBroadcaster.class).toInstance(broadcaster = new UDPBroadcaster("224.0.0.1", 43124, ShutdownHookRegistry.get()));
@@ -99,41 +94,85 @@ public final class JmxAopModule extends AbstractModule {
         }
     }
 
-    private void bindSettingsBean() {
-        final boolean[] bound = new boolean[1];
-        Matcher<? super TypeLiteral<?>> m = Matchers.any();//new SettingsMatcher();
+    static class SettingsBeanBinder implements Runnable {
 
-        binder().bindListener(m, new TypeListener() {
-            @Override
-            public <I> void hear(TypeLiteral<I> tl, TypeEncounter<I> te) {
-                if (!bound[0]) {
-                    bound[0] = true;
-                    registerSettingsBean(te);
+        private final SettingsBean bean;
+        private final MBeanServer mbeanServer;
+        List<ObjectName> names = new ArrayList<>(10);
+
+        @Inject
+        SettingsBeanBinder(Settings s, MBeanServer mbeanServer, ShutdownHookRegistry reg) throws MalformedObjectNameException, MBeanRegistrationException, NotCompliantMBeanException {
+            this.mbeanServer = mbeanServer;
+            bean = new SettingsBean(Providers.of(s));
+            ObjectName settingsName = new ObjectName(Settings.class.getPackage().getName(), "type", "Settings");
+            names.add(settingsName);
+            try {
+                mbeanServer.registerMBean(bean, settingsName);
+            } catch (InstanceAlreadyExistsException e) {
+                try {
+                    mbeanServer.unregisterMBean(settingsName);
+                } catch (InstanceNotFoundException ex) {
+                    Logger.getLogger(JmxAopModule.class.getName()).log(Level.SEVERE, null, ex);
+                } finally {
+                    try {
+                        mbeanServer.registerMBean(bean, settingsName);
+                    } catch (InstanceAlreadyExistsException ex) {
+                        Logger.getLogger(JmxAopModule.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            } catch (Exception e) {
+                // do nothing
+                e.printStackTrace();
+            }
+            for (RefreshInterval r : SettingsRefreshInterval.values()) {
+                try {
+                    IntervalsMBean bean = new Intervals(r);
+                    ObjectName name = new ObjectName(r.getClass().getName(), "type", r.name());
+                    names.add(name);
+                    try {
+                        mbeanServer.registerMBean(bean, name);
+                    } catch (InstanceAlreadyExistsException e) {
+                        try {
+                            mbeanServer.unregisterMBean(name);
+                        } catch (InstanceNotFoundException ex) {
+                            Logger.getLogger(JmxAopModule.class.getName()).log(Level.SEVERE, null, ex);
+                        } finally {
+                            mbeanServer.registerMBean(bean, name);
+                        }
+                    }
+                } catch (MBeanRegistrationException | NotCompliantMBeanException | MalformedObjectNameException ex) {
+                    Logger.getLogger(JmxAopModule.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (InstanceAlreadyExistsException e) {
+                    //do nothing
+                    e.printStackTrace();
                 }
             }
-        });
-    }
+        }
 
-    private void registerSettingsBean(TypeEncounter te) {
-        System.err.println("register settings bean");
-        //XXX handle namespaced settings
-        try {
-            ObjectName settingsName = new ObjectName(Settings.class.getPackage().getName(), "type", "Settings");
-            Provider<Settings> provider = te.getProvider(Settings.class);
-            SettingsBean bean = new SettingsBean(provider);
-            mbeanServer.registerMBean(bean, settingsName);
-        } catch (InstanceAlreadyExistsException ex) {
-            Logger.getLogger(JmxAopModule.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (MBeanRegistrationException | NotCompliantMBeanException | MalformedObjectNameException ex) {
-            throw new Error(ex);
+        @Override
+        public void run() {
+            for (ObjectName name : names) {
+                try {
+                    mbeanServer.unregisterMBean(name);
+                } catch (InstanceNotFoundException ex) {
+                    Logger.getLogger(JmxAopModule.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (MBeanRegistrationException ex) {
+                    Logger.getLogger(JmxAopModule.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
         }
     }
-    private class Benchmarker implements MethodInterceptor {
-        private final MBeanServer mbeanServer;
-        private Map<String, Stats> beans = new HashMap<String, Stats>();
 
-        private Benchmarker(MBeanServer mbeanServer) {
+    private class Benchmarker implements MethodInterceptor, Runnable {
+
+        private final MBeanServer mbeanServer;
+        private Map<String, Stats> beans = new HashMap<>();
+        private Set<ObjectName> names = new HashSet<>();
+        private final Provider<ShutdownHookRegistry> registry;
+
+        private Benchmarker(MBeanServer mbeanServer, Provider<ShutdownHookRegistry> registry) {
             this.mbeanServer = mbeanServer;
+            this.registry = registry;
         }
 
         @Override
@@ -150,6 +189,10 @@ public final class JmxAopModule extends AbstractModule {
                             bean.name = name;
                             beans.put(name, bean);
                             ObjectName on = new ObjectName(mi.getThis().getClass().getPackage().getName(), "type", mi.getThis().getClass().getSuperclass().getSimpleName());
+                            if (names.isEmpty()) {
+                                registry.get().add(this);
+                            }
+                            names.add(on);
                             mbeanServer.registerMBean(bean, on);
                         }
                     }
@@ -192,6 +235,19 @@ public final class JmxAopModule extends AbstractModule {
                         }
                         broadcaster.publish(message);
                     }
+                }
+            }
+        }
+
+        @Override
+        public void run() {
+            for (ObjectName n : names) {
+                try {
+                    mbeanServer.unregisterMBean(n);
+                } catch (InstanceNotFoundException ex) {
+                    Logger.getLogger(JmxAopModule.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (MBeanRegistrationException ex) {
+                    Logger.getLogger(JmxAopModule.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }

@@ -1,4 +1,4 @@
-/* 
+/*
  * The MIT License
  *
  * Copyright 2013 Tim Boudreau.
@@ -23,7 +23,10 @@
  */
 package com.mastfrog.statistics;
 
+import com.mastfrog.util.perf.Benchmark;
 import com.mastfrog.giulius.Dependencies;
+import com.mastfrog.guicy.annotations.Namespace;
+import com.mastfrog.settings.Settings;
 import com.mastfrog.settings.SettingsBuilder;
 import java.io.IOException;
 import java.util.Random;
@@ -33,11 +36,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public final class App {
-    
-    private App() {}
+
+    private App() {
+    }
 
     public static void main(String[] args) throws IOException {
-        Dependencies deps = Dependencies.create(new JmxAopModule(SettingsBuilder.createDefault().build()));
+        Settings settings = SettingsBuilder.createDefault().
+                add("foo", "bar").buildMutableSettings();
+
+        Dependencies deps = Dependencies.builder()
+                .add(settings, Namespace.DEFAULT)
+                .add(new JmxAopModule(settings)).build();
+
         ExecutorService svc = Executors.newCachedThreadPool();
         for (int i = 0; i < 33; i++) {
             Thingy thing = deps.getInstance(Thingy.class);
@@ -46,6 +56,7 @@ public final class App {
     }
 
     public static class Thingy implements Runnable {
+
         private static int ct;
         private int id = ct++;
 
@@ -60,11 +71,12 @@ public final class App {
         private final Random r = new Random(123);
 
         int foo;
+
         @Benchmark("doStuff")
         public void doStuff() {
             foo++;
             try {
-                Thread.sleep (r.nextInt(20));
+                Thread.sleep(r.nextInt(20));
             } catch (InterruptedException ex) {
                 Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
             }

@@ -23,6 +23,7 @@
  */
 package com.mastfrog.statistics;
 
+import com.mastfrog.util.perf.Benchmark;
 import com.mastfrog.util.Checks;
 import java.util.Arrays;
 import java.util.Objects;
