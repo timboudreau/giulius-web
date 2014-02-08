@@ -1,0 +1,43 @@
+<!DOCTYPE HTML">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+        <title>Your Message</title>
+        <style type='text/css'>
+            body {
+                color: white;
+                padding: 0px;
+                margin: 0px;
+                font-family: 'Helvetica';
+            }
+        </style>
+    </head>
+    <body>
+        <table width='100%' height='100%' bgcolor='#F0F4F0' color='gray' cellspacing='0' cellpadding='0'>
+            <tr valign='top' bgcolor='white'>
+                <td colspan="2">
+                    <font color='#6F6F6F'>
+                    <h1 style='subject'>${subject}</h1>
+                    <#if subhead??>
+                    ${subhead}
+                    </#if>
+                    <div class="body">
+                        <p>
+                            ${message}
+                        </p>
+                    </div>
+                    </font>
+                </td>
+            </tr>
+            <tr>
+                <td valign='middle' align='left' height='36' class='header'>
+                    <i><b><span color='#8F8F8F' style='font-size: 12px;color:#9F9F9F; text-decoration: none;'>&nbsp;&nbsp;Mastfrog Email API</span></b></font></i>
+                </td>
+                <td valign='middle' align='right' height='36' class='header'>
+                    <i><b><a color='#8F8F8F' style='font-size: 24px;color:#9F9F9F; text-decoration: none;' href='http://mastfrog.com'>mastfrog.com</a>&nbsp;&nbsp;</b></font></i>
+                </td>
+            </tr>
+        </tr>
+    </table>
+</body>
+</html>
