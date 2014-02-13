@@ -2,12 +2,15 @@ package com.mastfrog.statsd.aop;
 
 import com.google.common.collect.Maps;
 import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.mastfrog.giulius.Dependencies;
+import com.mastfrog.giulius.ShutdownHookRegistry;
 import com.mastfrog.guicy.annotations.Defaults;
 import com.mastfrog.settings.Settings;
 import static com.mastfrog.statsd.aop.StatsdModule.SETTINGS_KEY_STATSD_HOST;
@@ -19,9 +22,12 @@ import java.lang.reflect.AnnotatedElement;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.joda.time.Duration;
 
 /**
  * Provides some Guice/AOP goodness to the standard Statsd client.
@@ -43,9 +49,15 @@ public class StatsdModule extends AbstractModule {
     public static final String SETTINGS_KEY_STATSD_HOST = "statsd.host";
     public static final String SETTINGS_KEY_STATSD_PORT = "statsd.port";
     public static final String SETTINGS_KEY_STATSD_ENABLED = "statsd.enabled";
+
+    public static final String SETTINGS_KEY_PERIODIC_INTERVAL_SECONDS = "statsd.periodic.interval.seconds";
+    public static final int DEFAULT_PERIODIC_INTERVAL_SECONDS = 5;
+
     private final Settings settings;
     private final Set<String> counters = new HashSet<>();
     private final Class<? extends StatsdClient> clientType;
+
+    private final Set<Class<? extends Periodic>> periodics = new HashSet<>();
 
     /**
      * Construct a StatsdModule, using the provided Settings object to supply
@@ -76,8 +88,28 @@ public class StatsdModule extends AbstractModule {
      * @param name The counter name
      * @return this
      */
-    public StatsdModule registerCounter(String name) {
+    public final StatsdModule registerCounter(String name) {
         counters.add(name);
+        return this;
+    }
+
+    /**
+     * Registers a periodic gauge (which will be instantiated by Guice and can
+     * use &#064;Inject) which is called at an interval to set a statsd gauge
+     * (i.e. periodically count the number of users, requests, widgets,
+     * whatever).
+     *
+     * @param type The type
+     * @return this
+     */
+    public final StatsdModule registerPeriodic(Class<? extends Periodic> type) {
+        if (!Periodic.class.isAssignableFrom(type)) {
+            throw new ClassCastException("Not a subclass of " + Periodic.class.getName() + ": " + type);
+        }
+        if (type.isLocalClass()) {
+            throw new ClassCastException(type + " cannot be instantited by Guice - it is not static");
+        }
+        periodics.add(type);
         return this;
     }
 
@@ -113,6 +145,61 @@ public class StatsdModule extends AbstractModule {
         Matcher<AnnotatedElement> m = Matchers.annotatedWith(Metric.class);
         binder().bindInterceptor(Matchers.any(), m, new MetricInterceptor(binder().getProvider(StatsdClient.class)));
         onConfigure();
+        if (enabled && !periodics.isEmpty()) {
+            bind(new TL()).toInstance(periodics);
+            bind(PeriodicsStarter.class).asEagerSingleton();
+        }
+    }
+
+    private static class PeriodicsStarter implements Runnable {
+
+        private final Timer timer = new java.util.Timer("statsd.periodic", true);
+
+        @Inject
+        @SuppressWarnings("LeakingThisInConstructor")
+        PeriodicsStarter(Set<Class<? extends Periodic>> types, Dependencies deps, StatsdClient client, Settings settings, ShutdownHookRegistry reg) {
+            reg.add(this);
+            // Get out of our own way here
+            timer.schedule(new LaunchTask(types, deps, client, settings), 750);
+        }
+
+        private final class LaunchTask extends TimerTask {
+
+            private final Set<Class<? extends Periodic>> types;
+            private final Dependencies deps;
+            private final StatsdClient client;
+            private final Settings settings;
+
+            LaunchTask(Set<Class<? extends Periodic>> types, Dependencies deps, StatsdClient client, Settings settings) {
+                this.types = types;
+                this.deps = deps;
+                this.client = client;
+                this.settings = settings;
+            }
+
+            @Override
+            public void run() {
+                Duration period = new Duration(settings.getInt(SETTINGS_KEY_PERIODIC_INTERVAL_SECONDS, DEFAULT_PERIODIC_INTERVAL_SECONDS));
+                System.out.println("PeriodicsStarter start " + types);
+                for (Class<? extends Periodic> type : types) {
+                    System.out.println("START " + type);
+                    Periodic p = deps.getInstance(type);
+                    TimerTask task = p.start(client);
+                    Duration d = p.interval(period);
+                    long millis = d.getMillis();
+                    timer.scheduleAtFixedRate(task, millis, millis);
+                }
+            }
+        }
+
+        @Override
+        public void run() {
+            timer.cancel();
+        }
+    }
+
+    static class TL extends TypeLiteral<Set<Class<? extends Periodic>>> {
+
     }
 
     private static class CounterProvider implements Provider<Counter> {

@@ -1,14 +1,5 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.mastfrog.statsd.aop;
 
-import com.mastfrog.statsd.aop.StatsdModule;
-import com.mastfrog.statsd.aop.StatsdClient;
-import com.mastfrog.statsd.aop.Counter;
-import com.mastfrog.statsd.aop.Metric;
 import com.google.common.collect.Maps;
 import com.mastfrog.giulius.tests.GuiceRunner;
 import com.mastfrog.giulius.tests.TestWith;
@@ -16,10 +7,13 @@ import com.mastfrog.settings.Settings;
 import com.mastfrog.util.thread.QuietAutoCloseable;
 import com.mastfrog.statsd.aop.StatsdClientTest.M;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
+import org.joda.time.Duration;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
@@ -32,6 +26,25 @@ import org.junit.runner.RunWith;
 @RunWith(GuiceRunner.class)
 @TestWith(M.class)
 public class StatsdClientTest {
+
+    static int perCount;
+    static CountDownLatch latch = new CountDownLatch(1);
+
+    static class Per extends Periodic {
+
+        Per() {
+            super("stuff", Duration.standardSeconds(1));
+        }
+
+        @Override
+        protected int get() {
+            if (perCount > 1) {
+                latch.countDown();
+            }
+            return ++perCount;
+        }
+
+    }
 
     @Test
     public void test(StatsdClient client, Fixture fixture) throws InterruptedException {
@@ -59,6 +72,13 @@ public class StatsdClientTest {
         assertEquals(0, c.value("widgets"));
         fixture.widgets.decrement();
         assertEquals(-1, c.value("widgets"));
+
+        System.out.println("Wait on latch");
+        latch.await(10, TimeUnit.SECONDS);
+        int ct = perCount;
+        assertTrue(perCount >= 1);
+        int val = c.value("stuff");
+        assertTrue(val >= ct);
     }
 
     static class Fixture {
@@ -100,6 +120,7 @@ public class StatsdClientTest {
             super(settings, StatsdClientImpl.class);
             registerCounter("widgets");
             registerCounter("things");
+            registerPeriodic(Per.class);
         }
 
     }
