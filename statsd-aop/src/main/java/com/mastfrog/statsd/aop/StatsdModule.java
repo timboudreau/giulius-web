@@ -51,7 +51,7 @@ public class StatsdModule extends AbstractModule {
     public static final String SETTINGS_KEY_STATSD_ENABLED = "statsd.enabled";
 
     public static final String SETTINGS_KEY_PERIODIC_INTERVAL_SECONDS = "statsd.periodic.interval.seconds";
-    public static final int DEFAULT_PERIODIC_INTERVAL_SECONDS = 5;
+    public static final int DEFAULT_PERIODIC_INTERVAL_SECONDS = 240;
 
     private final Settings settings;
     private final Set<String> counters = new HashSet<>();
@@ -133,6 +133,7 @@ public class StatsdModule extends AbstractModule {
             bind(StatsdClient.class).to(clientType).in(Scopes.SINGLETON);
         } else {
             if (enabled) {
+                System.out.println("Statsd enabled.");
                 bind(StatsdClient.class).to(StatsdClientImpl.class).asEagerSingleton();
             } else {
                 System.err.println("Stats not enabled - using mock statsd client");
@@ -179,10 +180,8 @@ public class StatsdModule extends AbstractModule {
 
             @Override
             public void run() {
-                Duration period = new Duration(settings.getInt(SETTINGS_KEY_PERIODIC_INTERVAL_SECONDS, DEFAULT_PERIODIC_INTERVAL_SECONDS));
-                System.out.println("PeriodicsStarter start " + types);
+                Duration period = Duration.standardSeconds(settings.getInt(SETTINGS_KEY_PERIODIC_INTERVAL_SECONDS, DEFAULT_PERIODIC_INTERVAL_SECONDS));
                 for (Class<? extends Periodic> type : types) {
-                    System.out.println("START " + type);
                     Periodic p = deps.getInstance(type);
                     TimerTask task = p.start(client);
                     Duration d = p.interval(period);

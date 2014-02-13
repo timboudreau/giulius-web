@@ -1,6 +1,8 @@
 package com.mastfrog.statsd.aop;
 
+import com.google.inject.Inject;
 import com.mastfrog.giulius.ShutdownHookRegistry;
+import com.mastfrog.settings.Settings;
 import com.mastfrog.util.thread.QuietAutoCloseable;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
@@ -14,39 +16,57 @@ import javax.inject.Named;
 final class StatsdClientImpl implements StatsdClient, Runnable {
 
     private final StatsDClient statsd;
+    private final boolean log;
 
-    StatsdClientImpl(@Named(StatsdModule.SETTINGS_KEY_STATSD_HOST) String host, @Named(StatsdModule.SETTINGS_KEY_STATSD_PORT) int port, @Named(StatsdModule.SETTINGS_KEY_STATSD_PREFIX) String prefix, ShutdownHookRegistry reg) {
+    @Inject
+    StatsdClientImpl(@Named(StatsdModule.SETTINGS_KEY_STATSD_HOST) String host, @Named(StatsdModule.SETTINGS_KEY_STATSD_PORT) int port, @Named(StatsdModule.SETTINGS_KEY_STATSD_PREFIX) String prefix, ShutdownHookRegistry reg, Settings settings) {
         statsd = new NonBlockingStatsDClient(prefix, host, port);
+        log = settings.getBoolean("statsd.log", false);
         reg.add(this);
     }
 
     @Override
     public StatsdClient count(String string, int i) {
         statsd.count(string, i);
+        if (log) {
+            System.out.println("count " + string + " " + i);
+        }
         return this;
     }
 
     @Override
     public StatsdClient increment(String string) {
         statsd.increment(string);
+        if (log) {
+            System.out.println("increment " + string);
+        }
         return this;
     }
 
     @Override
     public StatsdClient decrement(String string) {
         statsd.decrement(string);
+        if (log) {
+            System.out.println("decrement " + string);
+        }
         return this;
     }
 
     @Override
     public StatsdClient gauge(String string, int i) {
         statsd.gauge(string, i);
+        if (log) {
+            System.out.println("gauge " + string + " " + i);
+        }
         return this;
     }
 
     @Override
     public StatsdClient time(String string, int i) {
         statsd.time(string, i);
+        if (log) {
+            System.out.println("time " + string + " " + i);
+        }
         return this;
     }
 
