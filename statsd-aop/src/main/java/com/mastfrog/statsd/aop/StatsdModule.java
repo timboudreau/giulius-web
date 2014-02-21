@@ -43,7 +43,7 @@ import org.joda.time.Duration;
  */
 @Defaults(SETTINGS_KEY_STATSD_PORT + "=49601\n" + SETTINGS_KEY_STATSD_HOST + "=localhost\n"
         + SETTINGS_KEY_STATSD_PREFIX + "=noname\n")
-public class StatsdModule extends AbstractModule {
+public class StatsdModule extends AbstractModule implements StatsdConfig<StatsdModule> {
 
     public static final String SETTINGS_KEY_STATSD_PREFIX = "statsd.prefix";
     public static final String SETTINGS_KEY_STATSD_HOST = "statsd.host";
