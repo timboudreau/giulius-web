@@ -32,7 +32,23 @@ final class DefaultHtmlMessageFormatter implements HtmlMessageFormatter {
 
     @Override
     public String format(EmailAddress sender, String subject, String body, Map<String, Object> injected) {
-        Template tpl = provider.template();
+        Template tpl = provider.template(null);
+        Map<String, Object> model = new HashMap<>(injected);
+        model.put("subject", escape(subject));
+        model.put("message", escape(body));
+        model.put("from", sender.toString());
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            tpl.process(model, new OutputStreamWriter(out));
+            String result = Streams.readString(new ByteArrayInputStream(out.toByteArray()), 256);
+            return result;
+        } catch (TemplateException | IOException ex) {
+            return Exceptions.chuck(ex);
+        }
+    }
+
+    @Override
+    public <T extends Enum<T>> String format(T template, EmailAddress sender, String subject, String body, Map<String, Object> injected) {
+        Template tpl = provider.template(template);
         Map<String, Object> model = new HashMap<>(injected);
         model.put("subject", escape(subject));
         model.put("message", escape(body));

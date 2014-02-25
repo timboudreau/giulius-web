@@ -2,7 +2,7 @@ package com.mastfrog.email.server;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.mastfrog.settings.Settings;
+import com.mastfrog.util.Checks;
 import com.mastfrog.util.ConfigurationError;
 import com.mastfrog.util.Exceptions;
 import freemarker.template.Configuration;
@@ -11,25 +11,43 @@ import freemarker.template.TemplateExceptionHandler;
 import freemarker.template.Version;
 import java.io.File;
 import java.io.IOException;
-import java.util.Set;
-import org.openide.util.Lookup;
 
+/**
+ * Convenience implementation of EnumHtmlEmailTemplateProvider which takes a
+ * folder on disk and an optional filename, and uses toString() on the passed
+ * enum if no file name is passed to its constructor.
+ *
+ * @author Tim Boudreau
+ * @param <T>
+ */
 @Singleton
-class DefaultHtmlTemplateProvider implements HtmlTemplateProvider {
+public abstract class EnumHtmlTemplateProviderOverFiles<T extends Enum<T>> extends EnumHtmlEmailTemplateProvider<T> {
 
     private volatile Configuration config;
     private volatile long lastLoad;
-    private final File file;
-    private final Set<EnumHtmlEmailTemplateProvider<?>> bound;
+    protected final File file;
+    protected final String templateName;
 
-    @Inject
-    DefaultHtmlTemplateProvider(Settings settings, Set<EnumHtmlEmailTemplateProvider<?>> bound) throws IOException {
-        String path = settings.getString(SETTINGS_KEY_EMAIL_TEMPLATE);
-        file = path == null ? null : new File(path);
+    protected EnumHtmlTemplateProviderOverFiles(Class<T> type, File folder) throws IOException {
+        this(type, folder, null);
+    }
+
+    protected EnumHtmlTemplateProviderOverFiles(Class<T> type, File folder, String fileName) throws IOException {
+        super(type);
+        Checks.notNull("folder", folder);
+        file = folder;
         if (file != null && (!file.exists() || !file.isDirectory())) {
-            throw new ConfigurationError("No such template dir - set " + SETTINGS_KEY_EMAIL_TEMPLATE + ": " + file);
+            throw new ConfigurationError("No such template dir - set " + folder);
         }
-        this.bound = bound;
+        if (fileName != null) {
+            File f = new File(file, fileName);
+            if (!f.exists() || !f.isFile()) {
+                throw new ConfigurationError("No such template dir - set " + folder);
+            } else if (f.exists() && !f.canRead()) {
+                throw new ConfigurationError("Missing read permission on " + f);
+            }
+        }
+        templateName = fileName;
     }
 
     private long lastModified() {
@@ -51,7 +69,7 @@ class DefaultHtmlTemplateProvider implements HtmlTemplateProvider {
                     config.setIncompatibleImprovements(new Version(2, 3, 20));
                     config.setTemplateExceptionHandler(TemplateExceptionHandler.HTML_DEBUG_HANDLER);
                     if (file == null) {
-                        config.setClassForTemplateLoading(DefaultHtmlTemplateProvider.class, "");
+                        config.setClassForTemplateLoading(EnumHtmlTemplateProviderOverFiles.class, "");
                     } else {
                         config.setDirectoryForTemplateLoading(file);
                         lastLoad = lastModified();
@@ -65,15 +83,23 @@ class DefaultHtmlTemplateProvider implements HtmlTemplateProvider {
     @Override
     public <T extends Enum<T>> Template template(T template) {
         if (template != null) {
-            for (EnumHtmlEmailTemplateProvider<?> e : bound) {
-                EnumHtmlEmailTemplateProvider<T> typed = e.match(template);
-                if (typed != null) {
-                    return typed.template(template);
-                }
-            }
+            return findTemplate(type.cast(template));
         }
         try {
             return config().getTemplate("message-template.html");
+        } catch (IOException ex) {
+            return Exceptions.chuck(ex);
+        }
+    }
+
+    @Override
+    protected Template findTemplate(T template) {
+        String fn = templateName;
+        if (fn == null) {
+            fn = template.toString();
+        }
+        try {
+            return config().getTemplate(fn);
         } catch (IOException ex) {
             return Exceptions.chuck(ex);
         }

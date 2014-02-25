@@ -12,5 +12,5 @@ public interface HtmlTemplateProvider {
 
     public static final String SETTINGS_KEY_EMAIL_TEMPLATE = "email.template.dir";
 
-    public Template template();
+    public <T extends Enum<T>> Template template(T template);
 }

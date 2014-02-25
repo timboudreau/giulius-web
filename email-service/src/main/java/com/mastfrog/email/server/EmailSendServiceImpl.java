@@ -32,11 +32,11 @@ final class EmailSendServiceImpl implements EmailSendService {
         this.formatter = formatter;
     }
 
-    private String generateHtmlBody(EmailAddress sender, String subject, String body, Map<String, Object> injected) {
-        return formatter.format(sender, subject, body, injected);
+    private <T extends Enum<T>> String generateHtmlBody(T enumValue, EmailAddress sender, String subject, String body, Map<String, Object> injected) {
+        return formatter.format(enumValue, sender, subject, body, injected);
     }
 
-    public void send(PublishListener l, String subject, String body, Map<String, Object> injected, EmailAddress from, String... to) {
+    public <T extends Enum<T>> void send(T template, PublishListener l, String subject, String body, Map<String, Object> injected, EmailAddress from, String... to) {
         Checks.notEmptyOrNull("to", to);
         for (String s : to) {
             new EmailAddress(s).getProblems().throwIfFatalPresent();
@@ -57,7 +57,7 @@ final class EmailSendServiceImpl implements EmailSendService {
             if (from != null) {
                 email.setFrom(from.toString());
             }
-            String htmlBody = generateHtmlBody(from, subject, body, injected);
+            String htmlBody = generateHtmlBody(template, from, subject, body, injected);
             if (htmlBody != null) {
                 email.setHtmlMsg(htmlBody);
             }
@@ -69,5 +69,10 @@ final class EmailSendServiceImpl implements EmailSendService {
             Logger.getLogger(EmailSendServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
             throw new IllegalStateException(ex); //for now
         }
+    }
+
+    @Override
+    public void send(PublishListener l, String subject, String body, Map<String, Object> injected, EmailAddress from, String... to) {
+        this.send(null, l, subject, body, injected, from, to);
     }
 }
