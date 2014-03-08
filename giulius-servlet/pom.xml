@@ -5,7 +5,7 @@
     <parent>
         <artifactId>mastfrog-parent</artifactId>
         <groupId>com.mastfrog</groupId>
-        <version>1.4.11</version>
+        <version>1.4.12</version>
     </parent>
     <artifactId>giulius-servlet</artifactId>
     <name>Giulius Servlet</name>
