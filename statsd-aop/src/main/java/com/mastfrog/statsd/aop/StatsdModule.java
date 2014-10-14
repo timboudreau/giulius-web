@@ -137,7 +137,6 @@ public class StatsdModule extends AbstractModule implements StatsdConfig<StatsdM
                 bind(StatsdClient.class).to(StatsdClientImpl.class).asEagerSingleton();
             } else {
                 System.err.println("Stats not enabled - using mock statsd client");
-                bind(StatsdClient.class).to(MockStatsdClient.class);
             }
         }
         for (String counterName : counters) {
