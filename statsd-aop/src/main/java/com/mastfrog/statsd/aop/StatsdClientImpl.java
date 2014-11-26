@@ -3,6 +3,7 @@ package com.mastfrog.statsd.aop;
 import com.google.inject.Inject;
 import com.mastfrog.giulius.ShutdownHookRegistry;
 import com.mastfrog.settings.Settings;
+import static com.mastfrog.statsd.aop.StatsdModule.SETTINGS_KEY_STATSD_TIME_TO_LIVE;
 import com.mastfrog.util.thread.QuietAutoCloseable;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
@@ -19,8 +20,9 @@ final class StatsdClientImpl implements StatsdClient, Runnable {
     private final boolean log;
 
     @Inject
-    StatsdClientImpl(@Named(StatsdModule.SETTINGS_KEY_STATSD_HOST) String host, @Named(StatsdModule.SETTINGS_KEY_STATSD_PORT) int port, @Named(StatsdModule.SETTINGS_KEY_STATSD_PREFIX) String prefix, ShutdownHookRegistry reg, Settings settings) {
-        statsd = new NonBlockingStatsDClient(prefix, host, port);
+    @SuppressWarnings("LeakingThisInConstructor")
+    StatsdClientImpl(@Named(StatsdModule.SETTINGS_KEY_STATSD_HOST) String host, @Named(StatsdModule.SETTINGS_KEY_STATSD_PORT) int port, @Named(StatsdModule.SETTINGS_KEY_STATSD_PREFIX) String prefix, @Named(SETTINGS_KEY_STATSD_TIME_TO_LIVE) int timeToLive, ShutdownHookRegistry reg, Settings settings) {
+        statsd = new NonBlockingStatsDClient(prefix, host, port, timeToLive);
         log = settings.getBoolean("statsd.log", false);
         reg.add(this);
     }

@@ -16,6 +16,7 @@ import com.mastfrog.settings.Settings;
 import static com.mastfrog.statsd.aop.StatsdModule.SETTINGS_KEY_STATSD_HOST;
 import static com.mastfrog.statsd.aop.StatsdModule.SETTINGS_KEY_STATSD_PORT;
 import static com.mastfrog.statsd.aop.StatsdModule.SETTINGS_KEY_STATSD_PREFIX;
+import static com.mastfrog.statsd.aop.StatsdModule.SETTINGS_KEY_STATSD_TIME_TO_LIVE;
 import com.mastfrog.util.ConfigurationError;
 import com.mastfrog.util.thread.QuietAutoCloseable;
 import java.lang.reflect.AnnotatedElement;
@@ -42,13 +43,14 @@ import org.joda.time.Duration;
  * @author Tim Boudreau
  */
 @Defaults(SETTINGS_KEY_STATSD_PORT + "=49601\n" + SETTINGS_KEY_STATSD_HOST + "=localhost\n"
-        + SETTINGS_KEY_STATSD_PREFIX + "=noname\n")
+        + SETTINGS_KEY_STATSD_PREFIX + "=noname\n" + SETTINGS_KEY_STATSD_TIME_TO_LIVE + "=-1\n")
 public class StatsdModule extends AbstractModule implements StatsdConfig<StatsdModule> {
 
     public static final String SETTINGS_KEY_STATSD_PREFIX = "statsd.prefix";
     public static final String SETTINGS_KEY_STATSD_HOST = "statsd.host";
     public static final String SETTINGS_KEY_STATSD_PORT = "statsd.port";
     public static final String SETTINGS_KEY_STATSD_ENABLED = "statsd.enabled";
+    public static final String SETTINGS_KEY_STATSD_TIME_TO_LIVE = "statsd.ttl";
 
     public static final String SETTINGS_KEY_PERIODIC_INTERVAL_SECONDS = "statsd.periodic.interval.seconds";
     public static final int DEFAULT_PERIODIC_INTERVAL_SECONDS = 240;
@@ -196,7 +198,7 @@ public class StatsdModule extends AbstractModule implements StatsdConfig<StatsdM
         }
     }
 
-    static class TL extends TypeLiteral<Set<Class<? extends Periodic>>> {
+    static class TL extends TypeLiteral<java.util.Set<Class<? extends Periodic>>> {
 
     }
 

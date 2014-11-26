@@ -13,7 +13,7 @@
         <dependency>
             <groupId>com.timgroup</groupId>
             <artifactId>java-statsd-client</artifactId>
-            <version>2.0.0</version>
+            <version>2.0.0-tdb-fork</version>
         </dependency>
         <dependency>
             <groupId>com.mastfrog</groupId>
