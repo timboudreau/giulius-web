@@ -62,13 +62,13 @@ class StubMailServer implements EmailServerService {
     }
 
     @Override
-    public void send(Email email, PublishListener<Email> listener) throws QueueFullException {
+    public <E extends Email> void send(E email, PublishListener<E> listener) throws QueueFullException {
         if (runner.isShutdown()) {
             throw new IllegalStateException("Already shut down");
         }
         // Add the Email to the Queue
 
-        final EmailAndListener emailAndListener = new EmailAndListener(email, listener);
+        final EmailAndListener<E> emailAndListener = new EmailAndListener<E>(email, listener);
         try {
             runner.add(emailAndListener);
             // If there is a listener, then set some info
@@ -116,7 +116,7 @@ class StubMailServer implements EmailServerService {
         // Queue containing all the Emails to be send
         // [PENDING: A alternative will be to persist somewhere, instead of having
         //           everything in Memory]
-        private ArrayBlockingQueue<EmailAndListener> emails;
+        private ArrayBlockingQueue<EmailAndListener<? extends Email>> emails;
 
         public EmailSender() {
             emails = new ArrayBlockingQueue<>(QUEUE_BUFFER);
@@ -127,6 +127,23 @@ class StubMailServer implements EmailServerService {
         boolean isShutdown() {
             return shutdown;
         }
+        
+        private <E extends Email> void doOne(EmailAndListener<E> emailAndListener) {
+            PublishListener<E> listener = emailAndListener.getListener();
+            E email = emailAndListener.getEmail();
+            sendOneEmail(email, listener);
+            if (Thread.interrupted()) {
+                List<EmailAndListener<?>> remaining = new ArrayList<EmailAndListener<?>>(emails);
+                for (EmailAndListener<?> rem : remaining) {
+                    sendOneEmail(rem);
+                }
+                return;
+            }
+        }
+        
+        private <E extends Email> void sendOneEmail(EmailAndListener<E> l) {
+            sendOneEmail(l.email, l.listener);
+        }
 
         @Override
         public void run() {
@@ -135,19 +152,10 @@ class StubMailServer implements EmailServerService {
                 synchronized (this) {
                     thread = Thread.currentThread();
                 }
-                EmailAndListener emailAndListener = null;
+                EmailAndListener<?> emailAndListener = null;
                 try {
                     while ((emailAndListener = emails.take()) != null) {
-                        PublishListener listener = emailAndListener.getListener();
-                        Email email = emailAndListener.getEmail();
-                        sendOneEmail(email, listener);
-                        if (Thread.interrupted()) {
-                            List<EmailAndListener> remaining = new ArrayList<EmailAndListener>(emails);
-                            for (EmailAndListener rem : remaining) {
-                                sendOneEmail(rem.getEmail(), rem.getListener());
-                            }
-                            return;
-                        }
+                        doOne(emailAndListener);
                     }
                 } catch (InterruptedException e) {
                     // IT SHOULD BE EXPECT a InterruptException,
@@ -163,7 +171,7 @@ class StubMailServer implements EmailServerService {
             }
         }
 
-        private void sendOneEmail(Email email, PublishListener listener) {
+        private <E extends Email> void sendOneEmail(E email, PublishListener<E> listener) {
             // SEND IT
             LOGGER.log(Level.INFO, "RealMailServer.Queue.run(): Sending Email to {0}", email.getToAddresses());
             try {
@@ -206,14 +214,14 @@ class StubMailServer implements EmailServerService {
         /**
          * If possible, get the Email out the queue
          */
-        public boolean cancel(EmailAndListener emailAndListener) {
+        public boolean cancel(EmailAndListener<?> emailAndListener) {
             return emails.remove(emailAndListener);
         }
 
         /**
          * Add an Email to the Queue
          */
-        public void add(EmailAndListener emailAndListener) throws QueueFullException {
+        public <E extends Email> void add(EmailAndListener<E> emailAndListener) throws QueueFullException {
             try {
                 emails.add(emailAndListener);
             } catch (IllegalStateException e) {
@@ -241,21 +249,21 @@ class StubMailServer implements EmailServerService {
      * bundled, it's inserted into the Queue, so QueueThread can handle both
      * Email and a (optional) PublishListener
      */
-    private final class EmailAndListener {
+    private final class EmailAndListener<E extends Email> {
 
-        private final Email email;
-        private final PublishListener listener;
+        private final E email;
+        private final PublishListener<E> listener;
 
-        public EmailAndListener(Email email, PublishListener listener) {
+        public EmailAndListener(E email, PublishListener<E> listener) {
             this.email = email;
             this.listener = listener;
         }
 
-        public Email getEmail() {
+        public E getEmail() {
             return email;
         }
 
-        public PublishListener getListener() {
+        public PublishListener<E> getListener() {
             return listener;
         }
     }

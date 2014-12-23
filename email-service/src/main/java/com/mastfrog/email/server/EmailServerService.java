@@ -16,6 +16,6 @@ public interface EmailServerService {
     static final String DEFAULT_FROM_EMAIL_ADDRESS_SETTINGS_KEY = "fallback.email.from.address";
     static final String EMAIL_REDIRECT_SETTINGS_KEY = "redirect.ALL.outbound.emails.to";
     static final String EMAIL_BOUNCE_ADDRESS_SETTINGS_KEY = "redirect.ALL.outbound.emails.to";
-    void send(Email email, PublishListener<Email> listener) throws QueueFullException;
+    <E extends Email> void send(E email, PublishListener<E> listener) throws QueueFullException;
     String getDefaultFromAddress();
 }

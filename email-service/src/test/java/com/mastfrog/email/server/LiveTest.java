@@ -22,12 +22,13 @@ import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.apache.commons.mail.Email;
 
 /**
  *
  * @author Tim Boudreau
  */
-public class LiveTest extends AbstractModule implements PublishListener {
+public class LiveTest extends AbstractModule implements PublishListener<Email> {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         Settings s = new SettingsBuilder()
@@ -64,17 +65,17 @@ public class LiveTest extends AbstractModule implements PublishListener {
     }
 
     @Override
-    public void progress(int i, int steps, String string, Object email) {
+    public void progress(int i, int steps, String string, Email email) {
         System.out.println("Progress " + i + " of " + steps + " - " + string);
     }
 
     @Override
-    public void onSuccess(Object email) {
+    public void onSuccess(Email email) {
         latch.countDown();
     }
 
     @Override
-    public void onFailure(Throwable failure, Object message) {
+    public void onFailure(Throwable failure, Email message) {
         System.out.println("MESG: " + message);
         failure.printStackTrace();
         latch.countDown();

@@ -10,9 +10,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
+import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
-import org.openide.util.Exceptions;
 
 /**
  * MessageService implementation which takes a Message and formats it into an
@@ -36,7 +36,8 @@ final class EmailSendServiceImpl implements EmailSendService {
         return formatter.format(enumValue, sender, subject, body, injected);
     }
 
-    public <T extends Enum<T>> void send(T template, PublishListener l, String subject, String body, Map<String, Object> injected, EmailAddress from, String... to) {
+    @SuppressWarnings("unchecked")
+    public <E extends Email, T extends Enum<T>> void send(T template, PublishListener<E> l, String subject, String body, Map<String, Object> injected, EmailAddress from, String... to) {
         Checks.notEmptyOrNull("to", to);
         for (String s : to) {
             new EmailAddress(s).getProblems().throwIfFatalPresent();
@@ -64,7 +65,7 @@ final class EmailSendServiceImpl implements EmailSendService {
             String plainBody = body;
             email.setTextMsg(plainBody);
             System.out.println("Sending message " + email);
-            sender.send(email, l);
+            sender.send((E)email, l); ///XXX
         } catch (EmailException | AddressException ex) {
             Logger.getLogger(EmailSendServiceImpl.class.getName()).log(Level.SEVERE, null, ex);
             throw new IllegalStateException(ex); //for now
@@ -72,7 +73,7 @@ final class EmailSendServiceImpl implements EmailSendService {
     }
 
     @Override
-    public void send(PublishListener l, String subject, String body, Map<String, Object> injected, EmailAddress from, String... to) {
+    public <E extends Email> void send(PublishListener<E> l, String subject, String body, Map<String, Object> injected, EmailAddress from, String... to) {
         this.send(null, l, subject, body, injected, from, to);
     }
 }

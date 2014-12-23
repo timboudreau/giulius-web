@@ -2,6 +2,7 @@ package com.mastfrog.email.server;
 
 import com.google.inject.ImplementedBy;
 import java.util.Map;
+import org.apache.commons.mail.Email;
 
 /**
  * Service for sending email
@@ -13,6 +14,6 @@ public interface EmailSendService {
 
     String BCC_LIST_SETTING = "smtp.bcc";
 
-    void send(PublishListener l, String subject, String body, Map<String, Object> injected, EmailAddress from, String... to);
-    <T extends Enum<T>> void send(T template, PublishListener l, String subject, String body, Map<String, Object> injected, EmailAddress from, String... to);
+    <E extends Email> void send(PublishListener<E> l, String subject, String body, Map<String, Object> injected, EmailAddress from, String... to);
+    <E extends Email, T extends Enum<T>> void send(T template, PublishListener<E> l, String subject, String body, Map<String, Object> injected, EmailAddress from, String... to);
 }

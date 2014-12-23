@@ -53,7 +53,7 @@ public class RealMailServerTest {
         email.setMsg("This is a test mail ... :-)");
         email.addTo("foo@bar.com");
         final boolean[] success = new boolean[1];
-        PublishListener pl = new PublishListener<Email>() {
+        PublishListener<Email> pl = new PublishListener<Email>() {
 
             @Override
             public void progress(int i, int steps, String string, Email email) {

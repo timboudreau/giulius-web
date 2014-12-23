@@ -19,6 +19,7 @@ public abstract class EnumHtmlEmailTemplateProvider<T extends Enum<T>> implement
         this.type = type;
     }
 
+    @SuppressWarnings("unchecked")
     <T extends Enum<T>> EnumHtmlEmailTemplateProvider<T> match(T enumValue) {
         if (enumValue != null && enumValue.getClass() == type) {
             return (EnumHtmlEmailTemplateProvider<T>) this;
