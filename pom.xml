@@ -18,5 +18,6 @@
         <module>statistics</module>
         <module>email-service</module>
         <module>statsd-aop</module>
+        <module>jackson-jodatime</module>
     </modules>
 </project>

@@ -1,7 +1,7 @@
-/* 
+/*
  * The MIT License
  *
- * Copyright 2013 Tim Boudreau.
+ * Copyright 2014 tim.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,21 +21,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.mastfrog.jackson;
+package com.mastfrog.jackson.jodatime;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.joda.JodaModule;
+import com.mastfrog.jackson.JacksonConfigurer;
+import org.openide.util.lookup.ServiceProvider;
 
 /**
- * Implement this interface and register it using &#064;ServiceProvider
- * to allow it to contribute configuration to Jackson on initialization.
+ * Registers with JacksonModule a JacksonConfigurer that sets up JSON support
+ * for Jode Time's types, using the jackson-databind-joda project under the
+ * hood.
  *
  * @author Tim Boudreau
  */
-public interface JacksonConfigurer {
-    /**
-     * Configure the passed object mapper
-     * @param m The object mapper
-     * @return An object mapper
-     */
-    public ObjectMapper configure(ObjectMapper m);
+@ServiceProvider(service = JacksonConfigurer.class)
+public final class JodeTimeJacksonConfigurer implements JacksonConfigurer {
+
+    @Override
+    public ObjectMapper configure(ObjectMapper om) {
+        om.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+        om.registerModule(new JodaModule());
+        return om;
+    }
 }
