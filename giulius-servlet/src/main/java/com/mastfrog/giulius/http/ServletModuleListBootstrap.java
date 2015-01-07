@@ -92,13 +92,14 @@ public class ServletModuleListBootstrap extends GuiceBootstrapServletListener {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected final Settings configure(ServletContext context, List<? super Module> addModulesHere) throws Exception {
         Settings settings = createSettings(context);
         final String modulesString = context.getInitParameter(moduleListInitParam);
         if (modulesString != null) {
             final String[] moduleStrings = modulesString.trim().split(",");
             for (final String moduleString : moduleStrings) {
-                final Class clazz = Thread.currentThread().getContextClassLoader().loadClass(moduleString.trim());
+                final Class<? extends Module> clazz = (Class<? extends Module>) Thread.currentThread().getContextClassLoader().loadClass(moduleString.trim());
                 final Module module = instantiateModule(clazz, settings);
                 addModulesHere.add(module);
             }
