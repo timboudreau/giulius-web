@@ -4,9 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import com.google.inject.name.Names;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ServiceLoader;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * A module which binds Jackson's ObjectMapper, and allows it to be configured
@@ -17,7 +21,8 @@ import java.util.ServiceLoader;
  */
 public final class JacksonModule extends AbstractModule {
 
-    private final JacksonConfigurer[] configurers;
+    private final List<JacksonConfigurer> configurers;
+    private final String bindingName;
 
     /**
      * Create a new JacksonModule which will <i>not</i> load from
@@ -25,13 +30,24 @@ public final class JacksonModule extends AbstractModule {
      *
      * @param configurers An explicit list of jackson configurers
      */
+    public JacksonModule(String bindingName, JacksonConfigurer... configurers) {
+        this.bindingName = bindingName;
+        for (JacksonConfigurer c : configurers) {
+            if (c == null) {
+                throw new IllegalArgumentException("Null configurer");
+            }
+        }
+        this.configurers = new LinkedList<>(Arrays.asList(configurers));
+    }
+
     public JacksonModule(JacksonConfigurer... configurers) {
         for (JacksonConfigurer c : configurers) {
             if (c == null) {
                 throw new IllegalArgumentException("Null configurer");
             }
         }
-        this.configurers = configurers;
+        this.configurers = new LinkedList<>(Arrays.asList(configurers));
+        this.bindingName = null;
     }
 
     /**
@@ -39,7 +55,21 @@ public final class JacksonModule extends AbstractModule {
      * of JacksonConfigurer on the classpath to use.
      */
     public JacksonModule() {
-        this(loadFromMetaInfServices());
+        this((String) null);
+    }
+
+    public JacksonModule(String bindingName) {
+        this.bindingName = bindingName;
+        this.configurers = new LinkedList<>(Arrays.asList(loadFromMetaInfServices()));
+    }
+
+    public JacksonModule(String bindingName, boolean loadFromMetaInfServices) {
+        this.bindingName = bindingName;
+        if (!loadFromMetaInfServices) {
+            this.configurers = new LinkedList<>();
+        } else {
+            this.configurers = new LinkedList<>(Arrays.asList(loadFromMetaInfServices()));
+        }
     }
 
     private static JacksonConfigurer[] loadFromMetaInfServices() {
@@ -50,26 +80,32 @@ public final class JacksonModule extends AbstractModule {
         return all.toArray(new JacksonConfigurer[all.size()]);
     }
 
+    public JacksonModule withConfigurer(JacksonConfigurer configurer) {
+        this.configurers.add(configurer);
+        return this;
+    }
+
     @Override
     protected void configure() {
-        bind(ObjectMapper.class).toProvider(new JacksonProvider());
+        if (bindingName != null) {
+            bind(ObjectMapper.class).annotatedWith(Names.named(bindingName))
+                    .toProvider(new JacksonProvider());
+        } else {
+            bind(ObjectMapper.class).toProvider(new JacksonProvider());
+        }
     }
 
     @Singleton
     private class JacksonProvider implements Provider<ObjectMapper> {
 
-        private volatile ObjectMapper mapper;
+        private ObjectMapper mapper = new ObjectMapper();
+        private final AtomicBoolean configured = new AtomicBoolean();
 
         @Override
         public ObjectMapper get() {
-            if (mapper == null) {
-                synchronized (this) {
-                    if (mapper == null) {
-                        mapper = new ObjectMapper();
-                        for (JacksonConfigurer config : configurers) {
-                            mapper = config.configure(mapper);
-                        }
-                    }
+            if (!configured.compareAndSet(false, true)) {
+                for (JacksonConfigurer config : configurers) {
+                    mapper = config.configure(mapper);
                 }
             }
             return mapper;
