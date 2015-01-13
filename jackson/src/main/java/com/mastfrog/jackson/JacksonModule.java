@@ -89,7 +89,6 @@ public final class JacksonModule extends AbstractModule {
         if (bindingName != null) {
             bind(ObjectMapper.class).annotatedWith(Names.named(bindingName))
                     .toProvider(new JacksonProvider());
-            System.out.println("BIND JACKSON NAME " + bindingName);
         } else {
             bind(ObjectMapper.class).toProvider(new JacksonProvider());
         }
@@ -104,7 +103,6 @@ public final class JacksonModule extends AbstractModule {
         @Override
         public ObjectMapper get() {
             if (configured.compareAndSet(false, true)) {
-                System.out.println("CONIGURE JACKSON WITH:");
                 for (JacksonConfigurer config : configurers) {
                     System.out.println(config);
                     mapper = config.configure(mapper);
