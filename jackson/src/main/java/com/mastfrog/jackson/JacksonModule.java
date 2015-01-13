@@ -104,7 +104,6 @@ public final class JacksonModule extends AbstractModule {
         public ObjectMapper get() {
             if (configured.compareAndSet(false, true)) {
                 for (JacksonConfigurer config : configurers) {
-                    System.out.println(config);
                     mapper = config.configure(mapper);
                 }
             }
