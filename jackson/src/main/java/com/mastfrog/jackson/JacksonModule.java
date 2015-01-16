@@ -22,11 +22,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public final class JacksonModule extends AbstractModule {
 
     private final List<JacksonConfigurer> configurers;
+    private final List<Class<? extends JacksonConfigurer>> declarativeConfigurers
+             = new LinkedList<>();
     private final String bindingName;
 
     /**
      * Create a new JacksonModule which will <i>not</i> load from
-     * meta-inf/services.
+     * meta-inf/services, but only bind the configurers passed here
+     * and any passed later to <code>withConfigurer</code>.
      *
      * @param configurers An explicit list of jackson configurers
      */
@@ -40,6 +43,12 @@ public final class JacksonModule extends AbstractModule {
         this.configurers = new LinkedList<>(Arrays.asList(configurers));
     }
 
+    /**
+     * Create a JacksonModule which will <i>not</i> look in ServiceLoader
+     * but only bind those configurers passed to it.
+     * 
+     * @param configurers The configurers
+     */
     public JacksonModule(JacksonConfigurer... configurers) {
         for (JacksonConfigurer c : configurers) {
             if (c == null) {
@@ -58,6 +67,14 @@ public final class JacksonModule extends AbstractModule {
         this((String) null);
     }
 
+    /**
+     * Create a new JacksonModule which will use ServiceLoader to find instances
+     * of JacksonConfigurer on the classpath, and bind them using 
+     * &#064;Named and thhe passed binding name
+     * 
+     * @param bindingName The binding name to make the object mapper available
+     * under
+     */
     public JacksonModule(String bindingName) {
         this (bindingName, true);
     }
@@ -80,17 +97,36 @@ public final class JacksonModule extends AbstractModule {
     }
 
     public JacksonModule withConfigurer(JacksonConfigurer configurer) {
+        if (configurer == null) {
+            throw new NullPointerException("configurer");
+        }
         this.configurers.add(configurer);
+        return this;
+    }
+    
+    public JacksonModule withConfigurer(Class<? extends JacksonConfigurer> type) {
+        if (type == null) {
+            throw new NullPointerException("type");
+        }
+        if (!JacksonConfigurer.class.isAssignableFrom(type)) {
+            throw new ClassCastException(type.getName() + " is not a subtype of " + JacksonConfigurer.class.getName());
+        }
+        this.declarativeConfigurers.add(type);
         return this;
     }
 
     @Override
     protected void configure() {
+        List<Provider<? extends JacksonConfigurer>> configurers = new LinkedList<>();
+        for (Class<? extends JacksonConfigurer> type : declarativeConfigurers) {
+            Provider<? extends JacksonConfigurer> p = binder().getProvider(type);
+            configurers.add(p);
+        }
         if (bindingName != null) {
             bind(ObjectMapper.class).annotatedWith(Names.named(bindingName))
-                    .toProvider(new JacksonProvider());
+                    .toProvider(new JacksonProvider(configurers));
         } else {
-            bind(ObjectMapper.class).toProvider(new JacksonProvider());
+            bind(ObjectMapper.class).toProvider(new JacksonProvider(configurers));
         }
     }
 
@@ -99,12 +135,20 @@ public final class JacksonModule extends AbstractModule {
 
         private ObjectMapper mapper = new ObjectMapper();
         private final AtomicBoolean configured = new AtomicBoolean();
+        private final List<Provider<? extends JacksonConfigurer>> providers;
+        
+        JacksonProvider(List<Provider<? extends JacksonConfigurer>> providers) {
+            this.providers = providers;
+        }
 
         @Override
         public ObjectMapper get() {
             if (configured.compareAndSet(false, true)) {
                 for (JacksonConfigurer config : configurers) {
                     mapper = config.configure(mapper);
+                }
+                for (Provider<? extends JacksonConfigurer> provider : providers) {
+                    mapper = provider.get().configure(mapper);
                 }
             }
             return mapper;
