@@ -131,7 +131,7 @@ public class StatsdModule extends AbstractModule implements StatsdConfig<StatsdM
             throw new ConfigurationError(SETTINGS_KEY_STATSD_PREFIX + " is not "
                     + "set.  Will not run this way in production mode.");
         }
-        if (clientType != null) {
+        if (clientType != null && enabled) {
             bind(StatsdClient.class).to(clientType).in(Scopes.SINGLETON);
         } else {
             if (enabled) {
@@ -144,12 +144,14 @@ public class StatsdModule extends AbstractModule implements StatsdConfig<StatsdM
         for (String counterName : counters) {
             bind(Counter.class).annotatedWith(Names.named(counterName)).toProvider(new CounterProvider(counterName, binder().getProvider(StatsdClient.class))).in(Scopes.SINGLETON);
         }
-        Matcher<AnnotatedElement> m = Matchers.annotatedWith(Metric.class);
-        binder().bindInterceptor(Matchers.any(), m, new MetricInterceptor(binder().getProvider(StatsdClient.class)));
-        onConfigure();
-        if (enabled && !periodics.isEmpty()) {
-            bind(new TL()).toInstance(periodics);
-            bind(PeriodicsStarter.class).asEagerSingleton();
+        if (enabled) {
+            Matcher<AnnotatedElement> m = Matchers.annotatedWith(Metric.class);
+            binder().bindInterceptor(Matchers.any(), m, new MetricInterceptor(binder().getProvider(StatsdClient.class)));
+            onConfigure();
+            if (enabled && !periodics.isEmpty()) {
+                bind(new TL()).toInstance(periodics);
+                bind(PeriodicsStarter.class).asEagerSingleton();
+            }
         }
     }
 
