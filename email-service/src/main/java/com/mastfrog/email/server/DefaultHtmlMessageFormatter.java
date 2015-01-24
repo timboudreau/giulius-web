@@ -2,6 +2,7 @@ package com.mastfrog.email.server;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.mastfrog.settings.Settings;
 import com.mastfrog.util.Exceptions;
 import com.mastfrog.util.Streams;
 import freemarker.template.Template;
@@ -17,12 +18,17 @@ import java.util.Map;
 final class DefaultHtmlMessageFormatter implements HtmlMessageFormatter {
 
     private final HtmlTemplateProvider provider;
+    private final boolean escape;
     @Inject
-    DefaultHtmlMessageFormatter(HtmlTemplateProvider prov) {
+    DefaultHtmlMessageFormatter(HtmlTemplateProvider prov, Settings settings) {
         this.provider = prov;
+        escape = settings.getBoolean("email.escape.html", true);
     }
 
     private String escape(String s) {
+        if (!escape) {
+            return s;
+        }
         return s.replace("&", "&amp;")
                 .replace("<", "&lt;")
                 .replace(">", "&gt;")

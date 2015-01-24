@@ -12,7 +12,6 @@ import freemarker.template.Version;
 import java.io.File;
 import java.io.IOException;
 import java.util.Set;
-import org.openide.util.Lookup;
 
 @Singleton
 class DefaultHtmlTemplateProvider implements HtmlTemplateProvider {
@@ -21,15 +20,17 @@ class DefaultHtmlTemplateProvider implements HtmlTemplateProvider {
     private volatile long lastLoad;
     private final File file;
     private final Set<EnumHtmlEmailTemplateProvider<?>> bound;
+    private final DefaultTemplate defaultTemplate;
 
     @Inject
-    DefaultHtmlTemplateProvider(Settings settings, Set<EnumHtmlEmailTemplateProvider<?>> bound) throws IOException {
+    DefaultHtmlTemplateProvider(Settings settings, Set<EnumHtmlEmailTemplateProvider<?>> bound, DefaultTemplate defaulTemplate) throws IOException {
         String path = settings.getString(SETTINGS_KEY_EMAIL_TEMPLATE);
         file = path == null ? null : new File(path);
         if (file != null && (!file.exists() || !file.isDirectory())) {
             throw new ConfigurationError("No such template dir - set " + SETTINGS_KEY_EMAIL_TEMPLATE + ": " + file);
         }
         this.bound = bound;
+        this.defaultTemplate = defaulTemplate;
     }
 
     private long lastModified() {
@@ -51,7 +52,7 @@ class DefaultHtmlTemplateProvider implements HtmlTemplateProvider {
                     config.setIncompatibleImprovements(new Version(2, 3, 20));
                     config.setTemplateExceptionHandler(TemplateExceptionHandler.HTML_DEBUG_HANDLER);
                     if (file == null) {
-                        config.setClassForTemplateLoading(DefaultHtmlTemplateProvider.class, "");
+                        config.setClassForTemplateLoading(defaultTemplate.relativeTo(), "");
                     } else {
                         config.setDirectoryForTemplateLoading(file);
                         lastLoad = lastModified();
@@ -73,9 +74,22 @@ class DefaultHtmlTemplateProvider implements HtmlTemplateProvider {
             }
         }
         try {
-            return config().getTemplate("message-template.html");
+            return config().getTemplate(defaultTemplate.resourceName());
         } catch (IOException ex) {
             return Exceptions.chuck(ex);
+        }
+    }
+
+    static class DefaultTemplateImpl extends DefaultTemplate {
+
+        @Override
+        public String resourceName() {
+            return "message-template.html";
+        }
+
+        @Override
+        public Class<?> relativeTo() {
+            return DefaultHtmlTemplateProvider.class;
         }
     }
 }
