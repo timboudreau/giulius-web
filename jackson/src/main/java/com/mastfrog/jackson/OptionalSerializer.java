@@ -30,8 +30,12 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.google.common.base.Optional;
 import java.io.IOException;
-import java.util.Optional;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
@@ -45,6 +49,7 @@ public class OptionalSerializer implements JacksonConfigurer {
     public ObjectMapper configure(ObjectMapper mapper) {
         SimpleModule sm = new SimpleModule("optional", new Version(1, 0, 0, null, "com.mastfrog", "jackson"));
         sm.addSerializer(new OptionalSer());
+        sm.addSerializer(new ReflectionOptionalSerializer());
         mapper.registerModule(sm);
         return mapper;
     }
@@ -66,6 +71,63 @@ public class OptionalSerializer implements JacksonConfigurer {
                 jg.writeNull();
             }
         }
+    }
+    
+    private static final class ReflectionOptionalSerializer extends JsonSerializer {
 
+        static Class<?> optionalType;
+        static boolean failed;
+        static Method GET_METHOD;
+        static Method IS_PRESENT_METHOD;
+        ReflectionOptionalSerializer() {
+            if (optionalType == null && !failed) {
+                try {
+                    optionalType = Class.forName("java.util.Optional");
+                    GET_METHOD = optionalType.getMethod("get");
+                    IS_PRESENT_METHOD = optionalType.getMethod("isPresent");
+                } catch (ClassNotFoundException ex) {
+                    failed = true;
+                    optionalType = Nothing.class;
+                } catch (NoSuchMethodException ex) {
+                    failed = true;
+                    optionalType = Nothing.class;
+                } catch (SecurityException ex) {
+                    failed = true;
+                    optionalType = Nothing.class;
+                }
+            }
+        }
+
+        @Override
+        public Class handledType() {
+            return optionalType;
+        }
+        
+
+        @Override
+        public void serialize(Object t, JsonGenerator jg, SerializerProvider sp) throws IOException, JsonProcessingException {
+            if (failed) {
+                return;
+            }
+            try {
+                Boolean present = (Boolean) IS_PRESENT_METHOD.invoke(t);
+                if (present) {
+                    Object val = GET_METHOD.invoke(t);
+                    sp.defaultSerializeValue(val, jg);
+                } else {
+                    jg.writeNull();
+                }
+            } catch (IllegalAccessException ex) {
+                Logger.getLogger(OptionalSerializer.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IllegalArgumentException ex) {
+                Logger.getLogger(OptionalSerializer.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (InvocationTargetException ex) {
+                Logger.getLogger(OptionalSerializer.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        private static final class Nothing {
+            private Nothing(){};
+        }
     }
 }
