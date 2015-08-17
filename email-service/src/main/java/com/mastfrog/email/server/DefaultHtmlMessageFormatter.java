@@ -44,8 +44,8 @@ final class DefaultHtmlMessageFormatter implements HtmlMessageFormatter {
         model.put("message", escape(body));
         model.put("from", sender.toString());
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            tpl.process(model, new OutputStreamWriter(out));
-            String result = Streams.readString(new ByteArrayInputStream(out.toByteArray()), 256);
+            tpl.process(model, new OutputStreamWriter(out, "UTF-8"));
+            String result = Streams.readString(new ByteArrayInputStream(out.toByteArray()), "UTF-8", 256);
             return result;
         } catch (TemplateException | IOException ex) {
             return Exceptions.chuck(ex);
@@ -60,8 +60,8 @@ final class DefaultHtmlMessageFormatter implements HtmlMessageFormatter {
         model.put("message", escape(body));
         model.put("from", sender.toString());
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            tpl.process(model, new OutputStreamWriter(out));
-            String result = Streams.readString(new ByteArrayInputStream(out.toByteArray()), 256);
+            tpl.process(model, new OutputStreamWriter(out, "UTF-8"));
+            String result = Streams.readString(new ByteArrayInputStream(out.toByteArray()), "UTF-8", 256);
             return result;
         } catch (TemplateException | IOException ex) {
             return Exceptions.chuck(ex);
