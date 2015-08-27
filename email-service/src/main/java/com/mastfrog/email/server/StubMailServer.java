@@ -161,7 +161,9 @@ class StubMailServer implements EmailServerService {
                     // IT SHOULD BE EXPECT a InterruptException,
                     // when the shutdown() method is called (the only case)
                     LOGGER.log(Level.WARNING, "RealMailServer.Queue.run(): INTERRUPTED EXCEPTION: {0}", e.getMessage());
-
+                    if (shutdown) {
+                        return;
+                    }
                 } catch (IllegalMonitorStateException e) {
                     LOGGER.log(Level.INFO, "RealMailServer.Queue.run(): ILLEGAL MONITOR EXCEPTION: {0}", e.getMessage());
                 }
@@ -237,6 +239,7 @@ class StubMailServer implements EmailServerService {
          */
         public void shutdown() {
             synchronized (this) {
+                shutdown = true;
                 if (thread != null) {
                     thread.interrupt();
                 }
