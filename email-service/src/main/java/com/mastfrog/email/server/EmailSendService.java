@@ -11,9 +11,6 @@ import org.apache.commons.mail.Email;
  */
 @ImplementedBy(EmailSendServiceImpl.class)
 public interface EmailSendService {
-
-    String BCC_LIST_SETTING = "smtp.bcc";
-
     <E extends Email> void send(PublishListener<E> l, String subject, String body, Map<String, Object> injected, EmailAddress from, String... to);
     <E extends Email, T extends Enum<T>> void send(T template, PublishListener<E> l, String subject, String body, Map<String, Object> injected, EmailAddress from, String... to);
 }

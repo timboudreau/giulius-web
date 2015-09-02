@@ -23,6 +23,7 @@ import org.openide.util.Exceptions;
 public final class EmailServiceModule extends AbstractModule {
 
     private final Settings settings;
+    public static final String SETTINGS_KEY_EMAIL_SEND_THREADS = "email.send.threads";
 
     public EmailServiceModule(Settings settings) {
         this.settings = settings;
@@ -34,15 +35,16 @@ public final class EmailServiceModule extends AbstractModule {
             // fail fast
             System.out.println("Production mode - using real mail server");
             bind(EmailServerService.class).to(RealMailServer.class).asEagerSingleton();
-            bind(HtmlTemplateProvider.class).asEagerSingleton();
+//            bind(HtmlTemplateProvider.class).asEagerSingleton();
         } else {
             System.out.println("Development mode - will not send real emails");
         }
-        bind(ExecutorService.class).annotatedWith(Names.named("mailqueue")).toInstance(Executors.newFixedThreadPool(2));
+        bind(ShutdownMailqueue.class).asEagerSingleton();
+        bind(ExecutorService.class).annotatedWith(Names.named("mailqueue")).toInstance(Executors.newFixedThreadPool(
+                settings.getInt(SETTINGS_KEY_EMAIL_SEND_THREADS, 2)));
         // Guice requires this even if none get bound elsewhere
         Multibinder<EnumHtmlEmailTemplateProvider<?>> placeholder
                 = Multibinder.newSetBinder(binder(), ENUM_EMAIL_TEMPLATE_PROVIDER_LITERAL);
-        bind(ShutdownMailqueue.class).asEagerSingleton();
     }
     public static TypeLiteral<EnumHtmlEmailTemplateProvider<?>> ENUM_EMAIL_TEMPLATE_PROVIDER_LITERAL = new TL();
 
@@ -62,10 +64,10 @@ public final class EmailServiceModule extends AbstractModule {
 
         @Override
         public void run() {
-            svc.shutdown();
+            svc.shutdownNow();
             System.out.println("Waiting for mail queue to empty");
             try {
-                svc.awaitTermination(2, TimeUnit.MINUTES);
+                svc.awaitTermination(10, TimeUnit.SECONDS);
             } catch (InterruptedException ex) {
                 Exceptions.printStackTrace(ex);
             }
