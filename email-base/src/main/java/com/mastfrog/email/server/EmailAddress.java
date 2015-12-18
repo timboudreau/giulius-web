@@ -2,13 +2,13 @@ package com.mastfrog.email.server;
 
 import com.mastfrog.url.Host;
 import com.mastfrog.util.Checks;
+import java.io.Serializable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.netbeans.validation.api.InvalidInputException;
 import org.netbeans.validation.api.Problems;
 import org.netbeans.validation.api.Validating;
 import org.netbeans.validation.api.builtin.stringvalidation.StringValidators;
-import org.openide.util.NbBundle;
 
 /**
  * Represents an email address.  Supports the full spec of email addresses;
@@ -32,25 +32,26 @@ import org.openide.util.NbBundle;
  *
  * @author Tim Boudreau
  */
-public final class EmailAddress implements Validating, Comparable<EmailAddress> {
+public final class EmailAddress implements Validating, Comparable<EmailAddress>, Serializable {
+
     private final String address;
 
     public EmailAddress(String address) {
-        this (address, false);
+        this(address, false);
     }
 
     public EmailAddress(String namePart, String addressPart) {
-        this (namePart + "<" + addressPart + ">", false);
+        this(namePart + "<" + addressPart + ">", false);
     }
 
     /**
      * Create an email address, and immediately validate it, throwing an
-     * InvalidInputException w/ a localized message if something is wrong
-     * with it.
+     * InvalidInputException w/ a localized message if something is wrong with
+     * it.
      *
      * @param address An email address
-     * @param failFast If true, an exception will be thrown on invalid
-     * email addresses
+     * @param failFast If true, an exception will be thrown on invalid email
+     * addresses
      */
     public EmailAddress(String address, boolean failFast) {
         Checks.notNull("address", address);
@@ -72,6 +73,10 @@ public final class EmailAddress implements Validating, Comparable<EmailAddress> 
     @Override
     public int hashCode() {
         return getAddressPart().hashCode();
+    }
+    
+    public EmailAddress toRawNormalizedAddress() {
+        return new EmailAddress(normalize().getAddressPart());
     }
 
     @Override
@@ -100,8 +105,9 @@ public final class EmailAddress implements Validating, Comparable<EmailAddress> 
 
     /**
      * Get the personal name portion of this email address, i.e. if it is
-     * &quot;Tim Boudreau &lt;tim&#064;foo.com&gt;&quot;, returns
-     * &quot;Tim Boudreau&quot;
+     * &quot;Tim Boudreau &lt;tim&#064;foo.com&gt;&quot;, returns &quot;Tim
+     * Boudreau&quot;
+     *
      * @return A name or null if none is present
      */
     public String getPersonalName() {
@@ -110,7 +116,7 @@ public final class EmailAddress implements Validating, Comparable<EmailAddress> 
             String name = m.group(1).trim();
             if (name != null && name.length() > 1) {
                 if (name.charAt(0) == '"' && name.charAt(name.length() - 1) == '"') {
-                    name = name.substring (1, name.length() - 1);
+                    name = name.substring(1, name.length() - 1);
                 }
                 return name;
             }
@@ -120,12 +126,13 @@ public final class EmailAddress implements Validating, Comparable<EmailAddress> 
         return null;
     }
 
-    private static final Pattern ADDRESS_PATTERN = Pattern.compile("(.*?)<(.*)>$"); //NOI18N
+    private static final Pattern ADDRESS_PATTERN = Pattern.compile("(.*)<(.*?)>$"); //NOI18N
     private String addressPart;
     /**
-     * Get the address only portion of an email address.  I.e., if
-     * you have &quot;Tim Boudreau &lt;tim&#064;foo.com&gt;&quot; then
+     * Get the address only portion of an email address. I.e., if you have
+     * &quot;Tim Boudreau &lt;tim&#064;foo.com&gt;&quot; then
      * &quot;tim&#064;foo.com&quot; will be returned.
+     *
      * @return The email address portion only
      */
     public synchronized String getAddressPart() {
@@ -148,25 +155,61 @@ public final class EmailAddress implements Validating, Comparable<EmailAddress> 
     }
 
     /**
-     * Get any problems with this address (i.e. validation errors).  All
-     * Problems will have localized messages.
+     * Get any problems with this address (i.e. validation errors). All Problems
+     * will have localized messages.
+     *
      * @return A list of problems, or null if there are no problems.
      */
     @Override
     public Problems getProblems() {
         Problems p = new Problems();
-        StringValidators.EMAIL_ADDRESS.validate(p, 
-                NbBundle.getMessage(EmailAddress.class, "EMAIL_ADDRESS"), address);
+        StringValidators.EMAIL_ADDRESS.validate(p,
+                "Address", address);
         return p;
     }
 
     @Override
     public boolean isValid() {
-        return getProblems() == null;
+        return !getProblems().hasFatal();
     }
 
     @Override
     public int compareTo(EmailAddress o) {
         return getAddressPart().compareToIgnoreCase(o.getAddressPart());
+    }
+
+    private static final Pattern ONE_COMMA = Pattern.compile("(.*?),[^,]{1}(.*)");
+    
+    private static final Pattern PARENS = Pattern.compile("(.*?)\\(.*\\)");
+    
+    private static final Pattern PLUS = Pattern.compile("(.*?)\\+.*");
+    
+    private static final Pattern PLUS_ADDR = Pattern.compile("(.+)\\+.*?@(.*)");
+
+    public EmailAddress normalize() {
+        String pn = getPersonalName();
+        if (pn != null) {
+            Matcher m = ONE_COMMA.matcher(pn);
+            if (m.matches()) {
+                pn = m.group(2).trim() + " " + m.group(1).trim();
+            }
+            m = PARENS.matcher(pn);
+            if (m.matches()) {
+                pn = m.group(1).trim();
+            }
+            m = PLUS.matcher(pn);
+            if (m.matches()) {
+                pn = m.group(1).trim();
+            }
+        }
+        String addr = getAddressPart().toLowerCase();
+        Matcher m = PLUS_ADDR.matcher(addr);
+        if (m.matches()) {
+            addr = m.group(1) + "@" + m.group(2);
+        }
+        if (pn != null) {
+            return new EmailAddress(pn, addr);
+        }
+        return new EmailAddress(addr);
     }
 }

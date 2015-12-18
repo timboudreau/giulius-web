@@ -3,7 +3,7 @@
     <parent>
         <artifactId>mastfrog-parent</artifactId>
         <groupId>com.mastfrog</groupId>
-        <version>1.6.3</version>
+        <version>1.6.4</version>
         <relativePath/>
     </parent>
     <name>Email Sender</name>
@@ -19,6 +19,10 @@
             <groupId>com.mastfrog</groupId>
             <artifactId>giulius</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.mastfrog</groupId>
+            <artifactId>email-base</artifactId>
+        </dependency>        
         <dependency>
             <groupId>com.mastfrog</groupId>
             <artifactId>url</artifactId>
