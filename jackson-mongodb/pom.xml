@@ -13,7 +13,7 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.mastfrog</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>jackson</artifactId>
         </dependency>
         <dependency>

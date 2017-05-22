@@ -10,7 +10,7 @@
     <artifactId>email-base</artifactId>
     <dependencies>
         <dependency>
-            <groupId>com.mastfrog</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>url</artifactId>
         </dependency>
     </dependencies>
