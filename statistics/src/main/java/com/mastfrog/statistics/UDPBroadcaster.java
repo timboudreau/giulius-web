@@ -27,7 +27,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.mastfrog.giulius.ShutdownHookRegistry;
-import com.mastfrog.guicy.annotations.Defaults;
+import com.mastfrog.giulius.annotations.Defaults;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;

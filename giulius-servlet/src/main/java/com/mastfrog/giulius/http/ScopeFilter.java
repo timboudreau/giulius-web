@@ -24,7 +24,7 @@
 package com.mastfrog.giulius.http;
 
 import com.mastfrog.giulius.Dependencies;
-import com.mastfrog.guicy.scope.AbstractScope;
+import com.mastfrog.giulius.scope.AbstractScope;
 import com.mastfrog.util.ConfigurationError;
 import com.mastfrog.util.Checks;
 import com.mastfrog.util.Invokable;

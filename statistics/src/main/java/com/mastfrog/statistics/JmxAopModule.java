@@ -31,7 +31,7 @@ import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.util.Providers;
 import com.mastfrog.giulius.ShutdownHookRegistry;
-import com.mastfrog.guicy.annotations.Defaults;
+import com.mastfrog.giulius.annotations.Defaults;
 import com.mastfrog.settings.RefreshInterval;
 import com.mastfrog.settings.SettingsRefreshInterval;
 import com.mastfrog.settings.Settings;

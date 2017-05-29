@@ -14,7 +14,7 @@ import static com.mastfrog.email.server.SmtpConfig.SMTP_USE_TLS_SETTINGS_KEY;
 import com.mastfrog.giulius.Dependencies;
 import com.mastfrog.giulius.DependenciesBuilder;
 import com.mastfrog.giulius.ShutdownHookRegistry;
-import com.mastfrog.guicy.annotations.Namespace;
+import com.mastfrog.giulius.annotations.Namespace;
 import com.mastfrog.settings.Settings;
 import com.mastfrog.settings.SettingsBuilder;
 import java.io.IOException;

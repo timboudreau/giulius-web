@@ -25,7 +25,7 @@ package com.mastfrog.statistics;
 
 import com.mastfrog.util.perf.Benchmark;
 import com.mastfrog.giulius.Dependencies;
-import com.mastfrog.guicy.annotations.Namespace;
+import com.mastfrog.giulius.annotations.Namespace;
 import com.mastfrog.settings.Settings;
 import com.mastfrog.settings.SettingsBuilder;
 import java.io.IOException;

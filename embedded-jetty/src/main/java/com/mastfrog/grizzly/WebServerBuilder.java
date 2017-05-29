@@ -26,7 +26,7 @@ package com.mastfrog.grizzly;
 import com.google.inject.Module;
 import com.google.inject.servlet.ServletModule;
 import com.mastfrog.giulius.DependenciesBuilder;
-import com.mastfrog.guicy.annotations.Namespace;
+import com.mastfrog.giulius.annotations.Namespace;
 import com.mastfrog.settings.Settings;
 import com.mastfrog.util.Checks;
 import java.io.File;

@@ -11,7 +11,7 @@ import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.mastfrog.giulius.Dependencies;
 import com.mastfrog.giulius.ShutdownHookRegistry;
-import com.mastfrog.guicy.annotations.Defaults;
+import com.mastfrog.giulius.annotations.Defaults;
 import com.mastfrog.settings.Settings;
 import static com.mastfrog.statsd.aop.StatsdModule.SETTINGS_KEY_STATSD_HOST;
 import static com.mastfrog.statsd.aop.StatsdModule.SETTINGS_KEY_STATSD_PORT;
