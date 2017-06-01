@@ -10,11 +10,6 @@
     <artifactId>jackson</artifactId>
     <name>Jackson Guice Integration</name>
     <dependencies>
-        <!--        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-            <type>jar</type>
-        </dependency>-->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
@@ -32,6 +27,16 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.mastfrog</groupId>
+            <artifactId>util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.mastfrog</groupId>
+            <artifactId>giulius-tests</artifactId>
+            <scope>test</scope>
+            <type>jar</type>
         </dependency>
     </dependencies>
     <url>https://github.com/timboudreau/giulius-web</url>

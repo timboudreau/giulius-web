@@ -7,6 +7,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ServiceLoader;
@@ -86,6 +87,20 @@ public final class JacksonModule extends AbstractModule {
         } else {
             this.configurers = new LinkedList<>(Arrays.asList(loadFromMetaInfServices()));
         }
+    }
+    
+    public JacksonModule withJavaTimeSerializationMode(TimeSerializationMode timeMode, DurationSerializationMode durationMode) {
+        if (timeMode == null) {
+            throw new IllegalArgumentException("Null mode");
+        }
+        for (Iterator<JacksonConfigurer> iter = configurers.iterator(); iter.hasNext();) {
+            if (iter.next() instanceof JavaTimeConfigurer) {
+                iter.remove();
+                break;
+            }
+        }
+        configurers.add(new JavaTimeConfigurer(timeMode, durationMode));
+        return this;
     }
 
     private static JacksonConfigurer[] loadFromMetaInfServices() {

@@ -30,10 +30,10 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.google.common.base.Optional;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.openide.util.lookup.ServiceProvider;
@@ -43,11 +43,11 @@ import org.openide.util.lookup.ServiceProvider;
  * @author Tim Boudreau
  */
 @ServiceProvider(service = JacksonConfigurer.class)
-public class OptionalSerializer implements JacksonConfigurer {
+public class OptionalSerializer1 implements JacksonConfigurer {
 
     @Override
     public ObjectMapper configure(ObjectMapper mapper) {
-        SimpleModule sm = new SimpleModule("optional1", new Version(1, 0, 0, null, "com.mastfrog", "com-google-common-base-optional"));
+        SimpleModule sm = new SimpleModule("optional2", new Version(1, 0, 0, null, "com.mastfrog", "java-util-optional"));
         sm.addSerializer(new OptionalSer());
         mapper.registerModule(sm);
         return mapper;
@@ -71,4 +71,5 @@ public class OptionalSerializer implements JacksonConfigurer {
             }
         }
     }
+
 }
