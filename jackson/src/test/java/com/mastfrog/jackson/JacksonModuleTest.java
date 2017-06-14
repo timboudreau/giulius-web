@@ -91,7 +91,7 @@ public class JacksonModuleTest {
         Period per = Period.of(5, 7, 23);
         
 
-        assertEquals(WHEN, testOne(ZonedDateTime.class, zdt, m).toInstant());
+        assertEquals(WHEN, testOne(ZonedDateTime.class, zdt.withZoneSameInstant(ZoneId.systemDefault()), m).toInstant());
         assertEquals(WHEN, testOne(LocalDateTime.class, ldt, m).toInstant(ZONE.getRules().getOffset(WHEN)));
         assertEquals(WHEN, testOne(OffsetDateTime.class, odt, m).toInstant());
         assertEquals(WHEN, testOne(Instant.class, WHEN, m));
