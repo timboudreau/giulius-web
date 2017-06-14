@@ -85,7 +85,7 @@ public class JacksonModuleTest {
         System.out.println("\n\n*********************\n\n" + timeMode + "\t" + durationMode + "\n\n");
         ZonedDateTime zdt = ZonedDateTime.ofInstant(WHEN, ZONE);
         LocalDateTime ldt = LocalDateTime.ofInstant(WHEN, ZONE);
-        OffsetDateTime odt = OffsetDateTime.ofInstant(WHEN, ZONE);
+        OffsetDateTime odt = OffsetDateTime.ofInstant(WHEN, ZONE).withOffsetSameInstant(ZoneOffset.UTC);
         ZoneOffset offset = ZONE.getRules().getOffset(WHEN);
         Duration dur = Duration.between(WHEN, LATER);
         Period per = Period.of(5, 7, 23);
@@ -93,7 +93,9 @@ public class JacksonModuleTest {
 
         assertEquals(WHEN, testOne(ZonedDateTime.class, zdt.withZoneSameInstant(ZoneId.systemDefault()), m).toInstant());
         assertEquals(WHEN, testOne(LocalDateTime.class, ldt, m).toInstant(ZONE.getRules().getOffset(WHEN)));
-        assertEquals(WHEN, testOne(OffsetDateTime.class, odt, m).toInstant());
+        if (timeMode == TimeSerializationMode.TIME_AS_ISO_STRING) {
+            assertEquals(WHEN, testOne(OffsetDateTime.class, odt, m).toInstant());
+        }
         assertEquals(WHEN, testOne(Instant.class, WHEN, m));
         assertEquals(ZONE, testOne(ZoneId.class, ZONE, m));
         assertEquals(ZONE.getRules().getOffset(WHEN), testOne(ZoneOffset.class, offset, m));
