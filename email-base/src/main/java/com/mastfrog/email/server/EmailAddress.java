@@ -34,21 +34,20 @@ import org.netbeans.validation.api.Validating;
 import org.netbeans.validation.api.builtin.stringvalidation.StringValidators;
 
 /**
- * Represents an email address.  Supports the full spec of email addresses;
- * equality tests, for practial purposes, use the address part as lower
- * case (RFC 2821 specifies that mailboxes can be case sensitive and
- * case should be <i>preserved</i> - in practice, no mail server treats
- * mailbox names as case sensitive).
+ * Represents an email address. Supports the full spec of email addresses;
+ * equality tests, for practial purposes, use the address part as lower case
+ * (RFC 2821 specifies that mailboxes can be case sensitive and case should be
+ * <i>preserved</i> - in practice, no mail server treats mailbox names as case
+ * sensitive).
  * <p/>
- * Searches that need to match an email address should normalize email
- * addresses using:
+ * Searches that need to match an email address should normalize email addresses
+ * using:
  * <pre>
  * EmailAddress addr = new EmailAddress(string);
  * if (addr.isValid()) { //no sense to search for a bad address - we should have none
  *    String searchString = addr.getAddress();
  * }
- * </pre>
- * This will get a normalized email address for maximal matching.
+ * </pre> This will get a normalized email address for maximal matching.
  * <p/>
  * <code>toString()</code> returns the original, unmodified email address as
  * passed to the constructor.
@@ -82,7 +81,7 @@ public final class EmailAddress implements Validating, Comparable<EmailAddress>,
         if (failFast) {
             Problems p = getProblems();
             if (p != null && p.hasFatal()) {
-                throw new InvalidInputException ("Bad email address " + address, p);
+                throw new InvalidInputException("Bad email address " + address, p);
             }
         }
     }
@@ -97,7 +96,7 @@ public final class EmailAddress implements Validating, Comparable<EmailAddress>,
     public int hashCode() {
         return getAddressPart().hashCode();
     }
-    
+
     public EmailAddress toRawNormalizedAddress() {
         return new EmailAddress(normalize().getAddressPart());
     }
@@ -122,8 +121,8 @@ public final class EmailAddress implements Validating, Comparable<EmailAddress>,
 
     public Host getDomain() {
         Host h = getHost();
-        return h == null ? null : h.size() > 1 ? 
-            Host.builder().add(h.getTopLevelDomain()).add(h.getDomain()).create() : null;
+        return h == null ? null : h.size() > 1
+                ? Host.builder().add(h.getTopLevelDomain()).add(h.getDomain()).create() : null;
     }
 
     /**
@@ -150,7 +149,8 @@ public final class EmailAddress implements Validating, Comparable<EmailAddress>,
     }
 
     private static final Pattern ADDRESS_PATTERN = Pattern.compile("(.*)<(.*?)>$"); //NOI18N
-    private String addressPart;
+    private volatile String addressPart;
+
     /**
      * Get the address only portion of an email address. I.e., if you have
      * &quot;Tim Boudreau &lt;tim&#064;foo.com&gt;&quot; then
@@ -158,20 +158,26 @@ public final class EmailAddress implements Validating, Comparable<EmailAddress>,
      *
      * @return The email address portion only
      */
-    public synchronized String getAddressPart() {
-        //frequently called, and profiling shows that at least for tests,
-        //recomputing this is a bottleneck (due to its use in equals()).
+    public String getAddressPart() {
         if (addressPart == null) {
-            Matcher m = ADDRESS_PATTERN.matcher(address);
-            if (m.find()) {
-                //technically, the user name portion of the address is
-                //case sensitive and the domain is not.  In practice, no
-                //mail server except perhaps very old unix inboxes
-                //actually enforce case sensitivity.  Since we prefer to
-                //err on the side of matching more values, we lower-case it
-                addressPart = m.group(2).toLowerCase().trim();
-            } else {
-                addressPart = address.toLowerCase();
+            synchronized (this) {
+                if (addressPart == null) {
+                    //frequently called, and profiling shows that at least for tests,
+                    //recomputing this is a bottleneck (due to its use in equals()).
+                    if (addressPart == null) {
+                        Matcher m = ADDRESS_PATTERN.matcher(address);
+                        if (m.find()) {
+                            //technically, the user name portion of the address is
+                            //case sensitive and the domain is not.  In practice, no
+                            //mail server except perhaps very old unix inboxes
+                            //actually enforce case sensitivity.  Since we prefer to
+                            //err on the side of matching more values, we lower-case it
+                            addressPart = m.group(2).toLowerCase().trim();
+                        } else {
+                            addressPart = address.toLowerCase();
+                        }
+                    }
+                }
             }
         }
         return addressPart;
@@ -202,11 +208,11 @@ public final class EmailAddress implements Validating, Comparable<EmailAddress>,
     }
 
     private static final Pattern ONE_COMMA = Pattern.compile("(.*?),[^,]{1}(.*)");
-    
+
     private static final Pattern PARENS = Pattern.compile("(.*?)\\(.*\\)");
-    
+
     private static final Pattern PLUS = Pattern.compile("(.*?)\\+.*");
-    
+
     private static final Pattern PLUS_ADDR = Pattern.compile("(.+)\\+.*?@(.*)");
 
     public EmailAddress normalize() {
