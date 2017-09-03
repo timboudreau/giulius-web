@@ -200,6 +200,10 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
 
         @Override
         public ZonedDateTime deserialize(JsonParser jp, DeserializationContext dc) throws IOException, JsonProcessingException {
+            if (!jp.currentToken().isNumeric()) {
+                String timestamp = jp.readValueAs(String.class);
+                return ZonedDateTime.parse(timestamp, DateTimeFormatter.ISO_ZONED_DATE_TIME);
+            }
             long epochMillis = jp.readValueAs(Long.TYPE);
             return Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault());
         }
@@ -364,6 +368,10 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
 
         @Override
         public ZonedDateTime deserialize(JsonParser jp, DeserializationContext dc) throws IOException, JsonProcessingException {
+            if (jp.currentToken().isNumeric()) {
+                long epochMillis = jp.readValueAs(Long.TYPE);
+                return Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault());
+            }
             String timestamp = jp.readValueAs(String.class);
             return ZonedDateTime.parse(timestamp, DateTimeFormatter.ISO_ZONED_DATE_TIME);
         }
