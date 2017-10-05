@@ -57,7 +57,6 @@ public class RealMailServerTest {
 
             @Override
             public void progress(int i, int steps, String string, Email email) {
-                System.out.println(i + " " + steps + " " + string + " " + email);
             }
 
             @Override

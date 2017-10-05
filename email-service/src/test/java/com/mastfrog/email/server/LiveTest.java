@@ -49,7 +49,6 @@ public class LiveTest extends AbstractModule implements PublishListener<Email> {
                 .build();
         EmailSendServiceImpl service = deps.getInstance(EmailSendServiceImpl.class);
 
-        System.out.println("Sending it");
         service.send(lt, "And again....", "Woo hoo, this is a test of something or other too.  Will it be formatted better?\n"
                 + "Lets see how paragraphs do!  I bet they do fine!\n\n--Tim", new HashMap<String, Object>(), new EmailAddress("robot@timboudreau.com"),
                 "niftiness@gmail.com");
@@ -66,7 +65,6 @@ public class LiveTest extends AbstractModule implements PublishListener<Email> {
 
     @Override
     public void progress(int i, int steps, String string, Email email) {
-        System.out.println("Progress " + i + " of " + steps + " - " + string);
     }
 
     @Override
@@ -76,7 +74,6 @@ public class LiveTest extends AbstractModule implements PublishListener<Email> {
 
     @Override
     public void onFailure(Throwable failure, Email message) {
-        System.out.println("MESG: " + message);
         failure.printStackTrace();
         latch.countDown();
     }

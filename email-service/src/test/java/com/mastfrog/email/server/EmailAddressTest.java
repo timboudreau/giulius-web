@@ -14,7 +14,6 @@ public class EmailAddressTest {
         String s = "TIMOTHY <TIMOTHY.BOUDREAU@ORACLE.COM>";
         EmailAddress a = new EmailAddress(s);
         Problems p = a.getProblems();
-        System.out.println("PROBS: " + p.getLeadProblem());
         assertFalse(p.getLeadProblem() + "", p.hasFatal());
         assertTrue(a.isValid());
         assertEquals("TIMOTHY", a.getPersonalName());
@@ -24,24 +23,16 @@ public class EmailAddressTest {
     @Test
     public void testQuotes() {
         EmailAddress a = new EmailAddress("\"Blog, Robert\" <RobertJ_Blog@QXMC.foo.edu>");
-        System.out.println("PLAIN: " + a.toString());
-        System.out.println("NORM: " + a.normalize().toString());
         assertEquals("Blog, Robert", a.getPersonalName());
         assertEquals("Robert Blog", a.normalize().getPersonalName());
 
         a = new EmailAddress("Robert Blog (Coog) <RobertJ_Blog@QXMC.foo.edu>");
-        System.out.println("PLAIN: " + a.toString());
-        System.out.println("NORM: " + a.normalize().toString());
         assertEquals("Robert Blog", a.normalize().getPersonalName());
 
         a = new EmailAddress("Robert Blog+stuff <RobertJ_Blog@QXMC.foo.edu>");
-        System.out.println("PLAIN: " + a.toString());
-        System.out.println("NORM: " + a.normalize().toString());
         assertEquals("Robert Blog", a.normalize().getPersonalName());
 
         a = new EmailAddress("Robert Blog+stuff <RobertJ_Blog+garbage@QXMC.foo.edu>");
-        System.out.println("PLAIN: " + a.toString());
-        System.out.println("NORM: " + a.normalize().toString());
         assertEquals("Robert Blog", a.normalize().getPersonalName());
         assertEquals("robertj_blog@qxmc.foo.edu", a.normalize().getAddressPart());
     }
@@ -50,8 +41,6 @@ public class EmailAddressTest {
     public void test() {
         String x = "\"MongoLab Operations <support@mongolab.com>\" <support@mongolab.com>";
         EmailAddress addr = new EmailAddress(x);
-        System.out.println("NAME: '" + addr.getPersonalName() + "'");
-        System.out.println("ADDR: '" + addr.getAddressPart() + "'");
         assertEquals("support@mongolab.com", addr.getAddressPart());
     }
 
