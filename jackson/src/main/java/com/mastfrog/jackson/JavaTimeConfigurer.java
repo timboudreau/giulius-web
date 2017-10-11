@@ -44,8 +44,10 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
+import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -60,6 +62,11 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
 
     private final TimeSerializationMode timeMode;
     private final DurationSerializationMode durationMode;
+    static final DateTimeFormatter ISO_INSTANT = new DateTimeFormatterBuilder()
+            .parseCaseInsensitive()
+            .appendInstant()
+            .toFormatter(Locale.US);
+    private static final ZoneId GMT = ZoneId.of("GMT");
 
     public JavaTimeConfigurer() {
         this(TimeSerializationMode.TIME_AS_EPOCH_MILLIS, DurationSerializationMode.DURATION_AS_MILLIS);
@@ -202,10 +209,10 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         public ZonedDateTime deserialize(JsonParser jp, DeserializationContext dc) throws IOException, JsonProcessingException {
             if (!jp.currentToken().isNumeric()) {
                 String timestamp = jp.readValueAs(String.class);
-                return ZonedDateTime.parse(timestamp, DateTimeFormatter.ISO_ZONED_DATE_TIME);
+                return ZonedDateTime.parse(timestamp, ISO_INSTANT);
             }
             long epochMillis = jp.readValueAs(Long.TYPE);
-            return Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault());
+            return Instant.ofEpochMilli(epochMillis).atZone(GMT);
         }
     }
 
@@ -353,7 +360,7 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
 
         @Override
         public void serialize(ZonedDateTime t, JsonGenerator jg, SerializerProvider sp) throws IOException, JsonProcessingException {
-            String formatted = DateTimeFormatter.ISO_ZONED_DATE_TIME.format(t);
+            String formatted = ISO_INSTANT.format(t);
             sp.defaultSerializeValue(formatted, jg);
         }
 
@@ -370,10 +377,11 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         public ZonedDateTime deserialize(JsonParser jp, DeserializationContext dc) throws IOException, JsonProcessingException {
             if (jp.currentToken().isNumeric()) {
                 long epochMillis = jp.readValueAs(Long.TYPE);
-                return Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault());
+                return Instant.ofEpochMilli(epochMillis).atZone(GMT);
             }
             String timestamp = jp.readValueAs(String.class);
-            return ZonedDateTime.parse(timestamp, DateTimeFormatter.ISO_ZONED_DATE_TIME);
+            Instant inst = Instant.parse(timestamp);
+            return ZonedDateTime.ofInstant(inst, GMT);
         }
     }
 
@@ -387,7 +395,8 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         @Override
         public OffsetDateTime deserialize(JsonParser jp, DeserializationContext dc) throws IOException, JsonProcessingException {
             String timestamp = jp.readValueAs(String.class);
-            return OffsetDateTime.parse(timestamp, DateTimeFormatter.ISO_ZONED_DATE_TIME);
+            Instant inst = Instant.parse(timestamp);
+            return OffsetDateTime.ofInstant(inst, GMT);
         }
     }
 
@@ -400,7 +409,7 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
 
         @Override
         public void serialize(OffsetDateTime t, JsonGenerator jg, SerializerProvider sp) throws IOException, JsonProcessingException {
-            String formatted = DateTimeFormatter.ISO_ZONED_DATE_TIME.format(t);
+            String formatted = ISO_INSTANT.format(t);
             sp.defaultSerializeValue(formatted, jg);
         }
     }

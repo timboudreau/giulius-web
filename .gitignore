@@ -10,7 +10,7 @@
 target/
 .classpath/
 .project/
-/nb-configuration.xml
+nb-configuration.xml
 
 /email-base/nbproject/
 /jackson/nbproject/

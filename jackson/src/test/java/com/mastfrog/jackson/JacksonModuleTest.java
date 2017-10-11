@@ -54,7 +54,7 @@ public class JacksonModuleTest {
 
     private static final Instant WHEN = Instant.ofEpochMilli(1496247701503L);
     private static final Instant LATER = WHEN.plus(Duration.ofHours(2).plus(Duration.ofMinutes(3)).plus(Duration.ofSeconds(5)).plus(Duration.ofMillis(854)));
-    private static final ZoneId ZONE = ZoneId.of("America/New_York");
+    private static final ZoneId ZONE = ZoneId.of("GMT");
 
     static class MillisTimeSerializationConfigModule extends AbstractModule {
 
@@ -82,16 +82,15 @@ public class JacksonModuleTest {
 
     @Test
     public void testSerializationAndDeserialization(ObjectMapper m, TimeSerializationMode timeMode, DurationSerializationMode durationMode) throws JsonProcessingException, IOException {
-        System.out.println("\n\n*********************\n\n" + timeMode + "\t" + durationMode + "\n\n");
+//        System.out.println("\n\n*********************\n\n" + timeMode + "\t" + durationMode + "\n\n");
         ZonedDateTime zdt = ZonedDateTime.ofInstant(WHEN, ZONE);
         LocalDateTime ldt = LocalDateTime.ofInstant(WHEN, ZONE);
         OffsetDateTime odt = OffsetDateTime.ofInstant(WHEN, ZONE).withOffsetSameInstant(ZoneOffset.UTC);
         ZoneOffset offset = ZONE.getRules().getOffset(WHEN);
         Duration dur = Duration.between(WHEN, LATER);
         Period per = Period.of(5, 7, 23);
-        
 
-        assertEquals(WHEN, testOne(ZonedDateTime.class, zdt.withZoneSameInstant(ZoneId.systemDefault()), m).toInstant());
+        assertEquals(WHEN, testOne(ZonedDateTime.class, zdt, m).toInstant());
         assertEquals(WHEN, testOne(LocalDateTime.class, ldt, m).toInstant(ZONE.getRules().getOffset(WHEN)));
         if (timeMode == TimeSerializationMode.TIME_AS_ISO_STRING) {
             assertEquals(WHEN, testOne(OffsetDateTime.class, odt, m).toInstant());
@@ -105,7 +104,7 @@ public class JacksonModuleTest {
 
     private <T> T testOne(Class<T> valueType, T value, ObjectMapper m) throws JsonProcessingException, IOException {
         String serialized = m.writeValueAsString(value);
-        System.out.println(valueType.getSimpleName() + " -> '" + serialized + "'  = " + value);
+//        System.out.println(valueType.getSimpleName() + " -> '" + serialized + "'  = " + value);
         T read = m.readValue(serialized, valueType);
         assertTrue(valueType.isInstance(value));
         assertEquals("Read value  of " + valueType.getSimpleName()
