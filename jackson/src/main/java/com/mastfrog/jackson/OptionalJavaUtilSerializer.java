@@ -31,11 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
@@ -43,11 +39,11 @@ import org.openide.util.lookup.ServiceProvider;
  * @author Tim Boudreau
  */
 @ServiceProvider(service = JacksonConfigurer.class)
-public class OptionalSerializer1 implements JacksonConfigurer {
+public class OptionalJavaUtilSerializer implements JacksonConfigurer {
 
     @Override
     public ObjectMapper configure(ObjectMapper mapper) {
-        SimpleModule sm = new SimpleModule("optional2", new Version(1, 0, 0, null, "com.mastfrog", "java-util-optional"));
+        SimpleModule sm = new SimpleModule("optional2", new Version(1, 0, 1, null, "com.mastfrog", "java-util-optional"));
         sm.addSerializer(new OptionalSer());
         mapper.registerModule(sm);
         return mapper;
