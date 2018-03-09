@@ -27,7 +27,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.joda.JodaModule;
 import com.mastfrog.jackson.JacksonConfigurer;
-import org.openide.util.lookup.ServiceProvider;
+import com.mastfrog.util.service.ServiceProvider;
 
 /**
  * Registers with JacksonModule a JacksonConfigurer that sets up JSON support
@@ -36,7 +36,7 @@ import org.openide.util.lookup.ServiceProvider;
  *
  * @author Tim Boudreau
  */
-@ServiceProvider(service = JacksonConfigurer.class)
+@ServiceProvider(JacksonConfigurer.class)
 public final class JodeTimeJacksonConfigurer implements JacksonConfigurer {
 
     @Override

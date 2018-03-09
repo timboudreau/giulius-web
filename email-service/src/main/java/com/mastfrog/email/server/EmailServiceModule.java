@@ -9,11 +9,10 @@ import com.google.inject.name.Names;
 import com.mastfrog.giulius.Dependencies;
 import com.mastfrog.giulius.ShutdownHookRegistry;
 import com.mastfrog.settings.Settings;
-import freemarker.template.Template;
+import com.mastfrog.util.Exceptions;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import org.openide.util.Exceptions;
 
 /**
  * Configures mail sending

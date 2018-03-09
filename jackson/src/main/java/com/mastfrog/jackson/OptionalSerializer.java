@@ -31,14 +31,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.base.Optional;
+import com.mastfrog.util.service.ServiceProvider;
 import java.io.IOException;
-import org.openide.util.lookup.ServiceProvider;
 
 /**
  *
  * @author Tim Boudreau
  */
-@ServiceProvider(service = JacksonConfigurer.class)
+@ServiceProvider(JacksonConfigurer.class)
 public class OptionalSerializer implements JacksonConfigurer {
 
     @Override

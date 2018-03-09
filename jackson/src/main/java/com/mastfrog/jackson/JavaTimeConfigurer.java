@@ -33,6 +33,7 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.mastfrog.util.service.ServiceProvider;
 import com.mastfrog.util.time.TimeUtil;
 import java.io.IOException;
 import java.time.Duration;
@@ -51,13 +52,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.openide.util.lookup.ServiceProvider;
 
 /**
  *
  * @author Tim Boudreau
  */
-@ServiceProvider(service = JacksonConfigurer.class)
+@ServiceProvider(JacksonConfigurer.class)
 public class JavaTimeConfigurer implements JacksonConfigurer {
 
     private final TimeSerializationMode timeMode;

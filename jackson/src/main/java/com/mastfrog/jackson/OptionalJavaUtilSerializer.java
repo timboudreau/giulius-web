@@ -30,15 +30,15 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.mastfrog.util.service.ServiceProvider;
 import java.io.IOException;
 import java.util.Optional;
-import org.openide.util.lookup.ServiceProvider;
 
 /**
  *
  * @author Tim Boudreau
  */
-@ServiceProvider(service = JacksonConfigurer.class)
+@ServiceProvider(JacksonConfigurer.class)
 public class OptionalJavaUtilSerializer implements JacksonConfigurer {
 
     @Override

@@ -35,9 +35,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.mastfrog.jackson.JacksonConfigurer;
+import com.mastfrog.util.service.ServiceProvider;
 import java.io.IOException;
 import java.util.Locale;
-import org.openide.util.lookup.ServiceProvider;
 
 /**
  * By default, Jackson serializes locales using Java constant names, so the
@@ -47,7 +47,7 @@ import org.openide.util.lookup.ServiceProvider;
  *
  * @author Tim Boudreau
  */
-@ServiceProvider(service = JacksonConfigurer.class)
+@ServiceProvider(JacksonConfigurer.class)
 public final class LocaleJacksonConfigurer implements JacksonConfigurer {
 
     private static final LocaleSerializer LOCALE_SERIALIZER = new LocaleSerializer();
