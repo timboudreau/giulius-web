@@ -25,9 +25,9 @@ package com.mastfrog.statistics;
 
 import com.mastfrog.util.perf.Benchmark;
 import com.mastfrog.giulius.Dependencies;
-import com.mastfrog.giulius.annotations.Namespace;
 import com.mastfrog.settings.Settings;
 import com.mastfrog.settings.SettingsBuilder;
+import static com.mastfrog.settings.SettingsBuilder.DEFAULT_NAMESPACE;
 import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
@@ -45,7 +45,7 @@ public final class App {
                 add("foo", "bar").buildMutableSettings();
 
         Dependencies deps = Dependencies.builder()
-                .add(settings, Namespace.DEFAULT)
+                .add(settings, DEFAULT_NAMESPACE)
                 .add(new JmxAopModule(settings)).build();
 
         ExecutorService svc = Executors.newCachedThreadPool();

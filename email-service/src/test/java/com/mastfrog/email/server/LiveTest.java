@@ -14,9 +14,9 @@ import static com.mastfrog.email.server.SmtpConfig.SMTP_USE_TLS_SETTINGS_KEY;
 import com.mastfrog.giulius.Dependencies;
 import com.mastfrog.giulius.DependenciesBuilder;
 import com.mastfrog.giulius.ShutdownHookRegistry;
-import com.mastfrog.giulius.annotations.Namespace;
 import com.mastfrog.settings.Settings;
 import com.mastfrog.settings.SettingsBuilder;
+import static com.mastfrog.settings.SettingsBuilder.DEFAULT_NAMESPACE;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
@@ -44,7 +44,7 @@ public class LiveTest extends AbstractModule implements PublishListener<Email> {
         LiveTest lt = new LiveTest();
 
         Dependencies deps = new DependenciesBuilder()
-                .add(s, Namespace.DEFAULT)
+                .add(s, DEFAULT_NAMESPACE)
                 .add(lt)
                 .build();
         EmailSendServiceImpl service = deps.getInstance(EmailSendServiceImpl.class);

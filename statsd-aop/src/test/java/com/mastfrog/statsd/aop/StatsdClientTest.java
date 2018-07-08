@@ -6,6 +6,7 @@ import com.mastfrog.giulius.tests.TestWith;
 import com.mastfrog.settings.Settings;
 import com.mastfrog.util.thread.QuietAutoCloseable;
 import com.mastfrog.statsd.aop.StatsdClientTest.M;
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -13,7 +14,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import org.joda.time.Duration;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
@@ -33,7 +33,7 @@ public class StatsdClientTest {
     static class Per extends Periodic {
 
         Per() {
-            super("stuff", Duration.standardSeconds(1));
+            super("stuff", Duration.ofSeconds(1));
         }
 
         @Override

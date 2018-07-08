@@ -26,8 +26,8 @@ package com.mastfrog.grizzly;
 import com.google.inject.Module;
 import com.google.inject.servlet.ServletModule;
 import com.mastfrog.giulius.DependenciesBuilder;
-import com.mastfrog.giulius.annotations.Namespace;
 import com.mastfrog.settings.Settings;
+import static com.mastfrog.settings.SettingsBuilder.DEFAULT_NAMESPACE;
 import com.mastfrog.util.Checks;
 import java.io.File;
 import java.io.IOException;
@@ -91,7 +91,7 @@ public final class WebServerBuilder {
     }
 
     public WebServerBuilder add(Settings settings) {
-        return add(Namespace.DEFAULT, settings);
+        return add(DEFAULT_NAMESPACE, settings);
     }
 
     public WebServerBuilder add(String namespace, Settings settings) {
@@ -252,7 +252,7 @@ public final class WebServerBuilder {
         }
 
         public WebServerBuilder add(Settings settings) {
-            return add(Namespace.DEFAULT, settings);
+            return add(DEFAULT_NAMESPACE, settings);
         }
 
         public WebServerBuilder add(String namespace, Settings settings) {
@@ -372,7 +372,7 @@ public final class WebServerBuilder {
         }
 
         public WebServerBuilder add(Settings settings) {
-            return add(Namespace.DEFAULT, settings);
+            return add(DEFAULT_NAMESPACE, settings);
         }
 
         public WebServerBuilder add(String namespace, Settings settings) {

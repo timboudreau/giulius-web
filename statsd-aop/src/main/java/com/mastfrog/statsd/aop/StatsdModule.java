@@ -20,6 +20,7 @@ import static com.mastfrog.statsd.aop.StatsdModule.SETTINGS_KEY_STATSD_TIME_TO_L
 import com.mastfrog.util.ConfigurationError;
 import com.mastfrog.util.thread.QuietAutoCloseable;
 import java.lang.reflect.AnnotatedElement;
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -28,7 +29,6 @@ import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.joda.time.Duration;
 
 /**
  * Provides some Guice/AOP goodness to the standard Statsd client.
@@ -183,12 +183,12 @@ public class StatsdModule extends AbstractModule implements StatsdConfig<StatsdM
 
             @Override
             public void run() {
-                Duration period = Duration.standardSeconds(settings.getInt(SETTINGS_KEY_PERIODIC_INTERVAL_SECONDS, DEFAULT_PERIODIC_INTERVAL_SECONDS));
+                Duration period = Duration.ofSeconds(settings.getInt(SETTINGS_KEY_PERIODIC_INTERVAL_SECONDS, DEFAULT_PERIODIC_INTERVAL_SECONDS));
                 for (Class<? extends Periodic> type : types) {
                     Periodic p = deps.getInstance(type);
                     TimerTask task = p.start(client);
                     Duration d = p.interval(period);
-                    long millis = d.getMillis();
+                    long millis = d.toMillis();
                     timer.scheduleAtFixedRate(task, millis, millis);
                 }
             }

@@ -1,8 +1,8 @@
 package com.mastfrog.statsd.aop;
 
 import com.mastfrog.util.Checks;
+import java.time.Duration;
 import java.util.TimerTask;
-import org.joda.time.Duration;
 
 /**
  * A thing which updates a statsd gauge and is called periodically on a timer.
