@@ -25,7 +25,11 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>util</artifactId>
+            <artifactId>util-misc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>util-net</artifactId>
         </dependency>
     </dependencies>
     <url>https://github.com/timboudreau/giulius-web</url>
