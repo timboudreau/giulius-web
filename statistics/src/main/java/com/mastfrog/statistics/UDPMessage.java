@@ -24,7 +24,7 @@
 package com.mastfrog.statistics;
 
 import com.mastfrog.util.perf.Benchmark;
-import com.mastfrog.util.Checks;
+import com.mastfrog.util.preconditions.Checks;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.regex.Matcher;

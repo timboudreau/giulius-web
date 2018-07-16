@@ -24,7 +24,7 @@
 package com.mastfrog.email.server;
 
 import com.mastfrog.url.Host;
-import com.mastfrog.util.Checks;
+import com.mastfrog.util.preconditions.Checks;
 import java.io.Serializable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

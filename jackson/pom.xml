@@ -30,7 +30,11 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>util</artifactId>
+            <artifactId>util-function</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>util-time</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>

@@ -1,6 +1,6 @@
 package com.mastfrog.statsd.aop;
 
-import com.mastfrog.util.Checks;
+import com.mastfrog.util.preconditions.Checks;
 import java.time.Duration;
 import java.util.TimerTask;
 

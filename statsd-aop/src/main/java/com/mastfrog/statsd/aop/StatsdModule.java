@@ -17,8 +17,7 @@ import static com.mastfrog.statsd.aop.StatsdModule.SETTINGS_KEY_STATSD_HOST;
 import static com.mastfrog.statsd.aop.StatsdModule.SETTINGS_KEY_STATSD_PORT;
 import static com.mastfrog.statsd.aop.StatsdModule.SETTINGS_KEY_STATSD_PREFIX;
 import static com.mastfrog.statsd.aop.StatsdModule.SETTINGS_KEY_STATSD_TIME_TO_LIVE;
-import com.mastfrog.util.ConfigurationError;
-import com.mastfrog.util.thread.QuietAutoCloseable;
+import com.mastfrog.util.preconditions.ConfigurationError;
 import java.lang.reflect.AnnotatedElement;
 import java.time.Duration;
 import java.util.HashSet;
@@ -29,6 +28,7 @@ import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import com.mastfrog.util.thread.QuietAutoCloseable;
 
 /**
  * Provides some Guice/AOP goodness to the standard Statsd client.

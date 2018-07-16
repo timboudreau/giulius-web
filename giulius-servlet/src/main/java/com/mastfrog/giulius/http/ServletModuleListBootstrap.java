@@ -24,10 +24,10 @@
 package com.mastfrog.giulius.http;
 
 import com.google.inject.Module;
-import com.mastfrog.util.ConfigurationError;
+import com.mastfrog.util.preconditions.ConfigurationError;
 import com.mastfrog.settings.Settings;
 import com.mastfrog.settings.SettingsBuilder;
-import com.mastfrog.util.Streams;
+import com.mastfrog.util.streams.Streams;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;

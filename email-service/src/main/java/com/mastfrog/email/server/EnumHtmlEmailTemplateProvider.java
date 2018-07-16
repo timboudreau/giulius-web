@@ -1,6 +1,6 @@
 package com.mastfrog.email.server;
 
-import com.mastfrog.util.Checks;
+import com.mastfrog.util.preconditions.Checks;
 import freemarker.template.Template;
 
 /**

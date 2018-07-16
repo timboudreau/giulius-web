@@ -4,7 +4,6 @@ import com.google.common.collect.Maps;
 import com.mastfrog.giulius.tests.GuiceRunner;
 import com.mastfrog.giulius.tests.TestWith;
 import com.mastfrog.settings.Settings;
-import com.mastfrog.util.thread.QuietAutoCloseable;
 import com.mastfrog.statsd.aop.StatsdClientTest.M;
 import java.time.Duration;
 import java.util.Map;
@@ -18,6 +17,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import com.mastfrog.util.thread.QuietAutoCloseable;
 
 /**
  *
@@ -221,7 +221,7 @@ public class StatsdClientTest {
             }
         }
 
-        private static final class Timer extends QuietAutoCloseable {
+        private static final class Timer implements QuietAutoCloseable {
 
             private final String name;
             private final long now = System.currentTimeMillis();

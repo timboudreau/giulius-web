@@ -3,7 +3,7 @@ package com.mastfrog.email.server;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.mastfrog.url.Host;
-import com.mastfrog.util.Checks;
+import com.mastfrog.util.preconditions.Checks;
 
 
 /**

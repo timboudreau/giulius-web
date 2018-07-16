@@ -2,9 +2,9 @@ package com.mastfrog.email.server;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.mastfrog.util.Checks;
-import com.mastfrog.util.ConfigurationError;
-import com.mastfrog.util.Exceptions;
+import com.mastfrog.util.preconditions.Checks;
+import com.mastfrog.util.preconditions.ConfigurationError;
+import com.mastfrog.util.preconditions.Exceptions;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateExceptionHandler;

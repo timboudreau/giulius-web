@@ -23,8 +23,8 @@
  */
 package com.mastfrog.grizzly;
 
-import com.mastfrog.util.Checks;
-import com.mastfrog.util.Streams;
+import com.mastfrog.util.preconditions.Checks;
+import com.mastfrog.util.streams.Streams;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;

@@ -9,7 +9,7 @@ import com.google.inject.name.Names;
 import com.mastfrog.giulius.Dependencies;
 import com.mastfrog.giulius.ShutdownHookRegistry;
 import com.mastfrog.settings.Settings;
-import com.mastfrog.util.Exceptions;
+import com.mastfrog.util.preconditions.Exceptions;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;

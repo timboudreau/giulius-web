@@ -41,7 +41,7 @@ import com.mastfrog.settings.SettingsBuilder;
 import com.mastfrog.giulius.Dependencies;
 import com.mastfrog.giulius.DependenciesBuilder;
 import com.mastfrog.giulius.annotations.Namespace;
-import com.mastfrog.util.Exceptions;
+import com.mastfrog.util.preconditions.Exceptions;
 import java.util.Enumeration;
 import java.util.Properties;
 

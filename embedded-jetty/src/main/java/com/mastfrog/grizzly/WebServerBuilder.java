@@ -28,7 +28,7 @@ import com.google.inject.servlet.ServletModule;
 import com.mastfrog.giulius.DependenciesBuilder;
 import com.mastfrog.settings.Settings;
 import static com.mastfrog.settings.SettingsBuilder.DEFAULT_NAMESPACE;
-import com.mastfrog.util.Checks;
+import com.mastfrog.util.preconditions.Checks;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;

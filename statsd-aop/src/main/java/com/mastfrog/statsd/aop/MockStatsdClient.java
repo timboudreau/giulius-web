@@ -7,7 +7,7 @@ import com.mastfrog.util.thread.QuietAutoCloseable;
  *
  * @author Tim Boudreau
  */
-class MockStatsdClient extends QuietAutoCloseable implements StatsdClient {
+class MockStatsdClient implements StatsdClient, QuietAutoCloseable {
 
     @Override
     public QuietAutoCloseable benchmark(String string) {

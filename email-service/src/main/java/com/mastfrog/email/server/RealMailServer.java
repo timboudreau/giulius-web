@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.mastfrog.giulius.ShutdownHookRegistry;
 import com.mastfrog.settings.Settings;
-import com.mastfrog.util.ConfigurationError;
+import com.mastfrog.util.preconditions.ConfigurationError;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
 import org.apache.commons.mail.Email;
