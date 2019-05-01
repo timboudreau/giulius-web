@@ -23,11 +23,11 @@
  */
 package com.mastfrog.giulius.http;
 
+import com.mastfrog.function.throwing.ThrowingFunction;
 import com.mastfrog.giulius.Dependencies;
 import com.mastfrog.giulius.scope.AbstractScope;
 import com.mastfrog.util.preconditions.ConfigurationError;
 import com.mastfrog.util.preconditions.Checks;
-import com.mastfrog.util.function.Invokable;
 import java.io.IOException;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -80,14 +80,11 @@ public abstract class ScopeFilter<S extends AbstractScope> implements Filter {
 
     @Override
     public final void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain fc) throws IOException, ServletException {
-        class I extends Invokable<Void, Void, ServletException> {
-            I() {
-                super (ServletException.class);
-            }
+        class I implements ThrowingFunction<Void, Void> {
             private IOException ioe;
 
             @Override
-            public Void run(Void argument) throws ServletException {
+            public Void apply(Void argument) throws ServletException {
                 try {
                     fc.doFilter(request, response);
                 } catch (IOException ex) {
@@ -97,7 +94,15 @@ public abstract class ScopeFilter<S extends AbstractScope> implements Filter {
             }
         }
         I i = new I();
-        scope.<Void,Void,ServletException>run(new I(), null, getScopeContents(request));
+        try {
+            scope.<Void,Void>run(new I(), null, getScopeContents(request));
+        } catch (Exception ex) {
+            if (ex instanceof IOException) {
+                throw ((IOException) ex);
+            } else {
+                throw new IOException(ex);
+            }
+        }
         if (i.ioe != null) {
             throw i.ioe;
         }
