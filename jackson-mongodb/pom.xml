@@ -7,9 +7,10 @@
         <version>2.5.0-dev</version>
     </parent>
     <artifactId>jackson-mongodb</artifactId>
+    <url>https://github.com/timboudreau/giulius-web</url>
     <dependencies>
         <dependency>
-            <groupId>com.mastfrog</groupId>
+            <groupId>${project.groupId}</groupId>
             <artifactId>annotation-processors</artifactId>
             <scope>compile</scope>
         </dependency>
@@ -31,10 +32,11 @@
         <url>https://github.com/timboudreau/giulius-web/issues</url>
     </issueManagement>
     <scm>
-        <url>https://github.com/timboudreau/giulius-web</url>
+        <url>https://github.com/timboudreau/giulius-web.git</url>
         <connection>scm:git:https://github.com/timboudreau/giulius-web.git</connection>
         <developerConnection>git@github.com/timboudreau/giulius-web.git</developerConnection>
     </scm>
+    
     <organization>
         <name>Mastfrog Technologies</name>
         <url>https://mastfrog.com</url>
@@ -42,7 +44,8 @@
     <licenses>
         <license>
             <name>MIT</name>
-            <url>http://opensource.org/licenses/MIT</url>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
         </license>
     </licenses>
     <developers>

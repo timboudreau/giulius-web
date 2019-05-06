@@ -8,6 +8,7 @@
         <relativePath/>
     </parent>
     <artifactId>embedded-jetty</artifactId>
+    <url>https://github.com/timboudreau/giulius-web</url>
     <name>Embedded Jetty for Giulius Servlets</name>
     <properties/>
     <dependencies>
@@ -63,10 +64,11 @@
         <url>https://github.com/timboudreau/giulius-web/issues</url>
     </issueManagement>
     <scm>
-        <url>https://github.com/timboudreau/giulius-web</url>
+        <url>https://github.com/timboudreau/giulius-web.git</url>
         <connection>scm:git:https://github.com/timboudreau/giulius-web.git</connection>
         <developerConnection>git@github.com/timboudreau/giulius-web.git</developerConnection>
     </scm>
+    
     <organization>
         <name>Mastfrog Technologies</name>
         <url>https://mastfrog.com</url>
@@ -74,7 +76,8 @@
     <licenses>
         <license>
             <name>MIT</name>
-            <url>http://opensource.org/licenses/MIT</url>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
         </license>
     </licenses>
     <developers>
