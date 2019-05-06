@@ -26,7 +26,10 @@
             <artifactId>mongo-java-driver</artifactId>
         </dependency>
     </dependencies>
-    <url>https://github.com/timboudreau/giulius-web</url>
+    <issueManagement>
+        <system>Github</system>
+        <url>https://github.com/timboudreau/giulius-web/issues</url>
+    </issueManagement>
     <scm>
         <url>https://github.com/timboudreau/giulius-web</url>
         <connection>scm:git:https://github.com/timboudreau/giulius-web.git</connection>
