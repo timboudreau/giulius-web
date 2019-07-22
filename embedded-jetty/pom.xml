@@ -10,7 +10,9 @@
     <artifactId>embedded-jetty</artifactId>
     <url>https://github.com/timboudreau/giulius-web</url>
     <name>Embedded Jetty for Giulius Servlets</name>
-    <properties/>
+    <properties>
+        <enforcer.skip>true</enforcer.skip>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
