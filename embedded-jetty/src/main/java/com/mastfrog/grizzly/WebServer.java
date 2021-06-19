@@ -201,6 +201,7 @@ public final class WebServer {
                         }
 
                         @Override
+                        @SuppressWarnings("deprecation")
                         public URL getURL() {
                             try {
                                 return res.toURL();
