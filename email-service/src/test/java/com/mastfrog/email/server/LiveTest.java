@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import com.mastfrog.email.EmailAddress;
 import static com.mastfrog.email.server.EmailServerService.DEFAULT_FROM_EMAIL_ADDRESS_SETTINGS_KEY;
 import static com.mastfrog.email.server.SmtpConfig.SMTP_HOST_SETTINGS_KEY;
 import static com.mastfrog.email.server.SmtpConfig.SMTP_PASSWORD_SETTINGS_KEY;

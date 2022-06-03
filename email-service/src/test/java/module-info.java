@@ -2,12 +2,15 @@
 open module com.mastfrog.email.server {
     exports com.mastfrog.email.server;
 
-    requires javax.mail;
     // derived from javax.activation/activation-1.1.1 in javax/activation/activation/1.1.1/activation-1.1.1.pom
     requires activation;
+    requires javax.mail;
 
     // derived from com.google.inject.extensions/guice-multibindings-0.0.0-? in com/google/inject/extensions/guice-multibindings/4.2.3/guice-multibindings-4.2.3.pom
     requires com.google.guice.extensions.multibindings;
+
+    // Inferred from source scan
+    requires com.mastfrog.collections;
 
     // Sibling com.mastfrog/email-base-3.0.0-dev
     requires com.mastfrog.email.base;
@@ -19,6 +22,7 @@ open module com.mastfrog.email.server {
 
     // Transitive detected by source scan
     requires com.mastfrog.giulius.settings;
+    requires com.mastfrog.giulius.tests;
 
     // Inferred from source scan
     requires com.mastfrog.preconditions;
@@ -37,6 +41,5 @@ open module com.mastfrog.email.server {
     requires java.logging;
 
     // derived from junit/junit-4.13.2:compile in junit/junit/4.13.2/junit-4.13.2.pom
-//    requires transitive junit;
-
+    requires junit;
 }

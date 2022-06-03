@@ -1,6 +1,7 @@
 package com.mastfrog.email.server;
 
 import com.google.inject.ImplementedBy;
+import com.mastfrog.email.EmailAddress;
 
 /**
  * Email addresses involved in sending mail

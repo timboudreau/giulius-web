@@ -1,5 +1,6 @@
 package com.mastfrog.email.server;
 
+import com.mastfrog.email.EmailAddress;
 import com.mastfrog.giulius.tests.GuiceRunner;
 import com.mastfrog.giulius.tests.TestWith;
 import com.mastfrog.util.collections.MapBuilder;

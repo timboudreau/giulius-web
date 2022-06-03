@@ -1,5 +1,6 @@
 package com.mastfrog.email.server;
 
+import com.mastfrog.email.EmailAddress;
 import com.mastfrog.url.Host;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

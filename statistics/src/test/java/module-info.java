@@ -3,6 +3,7 @@ open module com.mastfrog.statistics {
     exports com.mastfrog.statistics;
 
     requires java.management;
+
     // Sibling com.mastfrog/giulius-3.0.0-dev
     // Transitive detected by source scan
     requires com.mastfrog.giulius;
@@ -28,5 +29,6 @@ open module com.mastfrog.statistics {
     requires com.mastfrog.util.function;
     requires java.logging;
 
-    requires aopalliance;
+    // Inferred from test-source-scan
+    requires junit;
 }

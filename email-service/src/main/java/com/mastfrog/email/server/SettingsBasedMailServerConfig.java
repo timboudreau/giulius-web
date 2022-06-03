@@ -2,6 +2,7 @@ package com.mastfrog.email.server;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.mastfrog.email.EmailAddress;
 
 final class SettingsBasedMailServerConfig implements EmailAddressesConfig {
 

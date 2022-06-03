@@ -8,6 +8,7 @@ open module com.mastfrog.jackson {
 
     // Sibling com.mastfrog/annotation-processors-3.0.0-dev:compile
     requires com.mastfrog.annotation.processors;
+    requires com.mastfrog.giulius.tests;
 
     // Inferred from source scan
 
@@ -19,6 +20,9 @@ open module com.mastfrog.jackson {
 
     // derived from com.fasterxml.jackson.core/jackson-databind-0.0.0-? in com/fasterxml/jackson/core/jackson-databind/2.9.9.3/jackson-databind-2.9.9.3.pom
     requires transitive com.fasterxml.jackson.databind;
+
+    // Inferred from test-source-scan
+    requires junit;
     provides com.mastfrog.jackson.JacksonConfigurer with
        com.mastfrog.jackson.JavaTimeConfigurer,
        com.mastfrog.jackson.LocaleJacksonConfigurer,

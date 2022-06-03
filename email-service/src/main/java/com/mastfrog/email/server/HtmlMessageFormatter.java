@@ -1,6 +1,7 @@
 package com.mastfrog.email.server;
 
 import com.google.inject.ImplementedBy;
+import com.mastfrog.email.EmailAddress;
 import java.util.Map;
 
 /**

@@ -1,6 +1,7 @@
 package com.mastfrog.email.server;
 
 import com.google.inject.Inject;
+import com.mastfrog.email.EmailAddress;
 import com.mastfrog.util.preconditions.Checks;
 import java.util.ArrayList;
 import java.util.Arrays;

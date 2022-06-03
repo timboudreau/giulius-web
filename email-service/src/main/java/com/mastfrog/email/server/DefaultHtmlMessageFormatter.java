@@ -2,6 +2,7 @@ package com.mastfrog.email.server;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.mastfrog.email.EmailAddress;
 import com.mastfrog.settings.Settings;
 import com.mastfrog.util.preconditions.Exceptions;
 import com.mastfrog.util.streams.Streams;

@@ -3,6 +3,7 @@ package com.mastfrog.email.server;
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.name.Names;
+import com.mastfrog.email.EmailAddress;
 import com.mastfrog.email.server.RealMailServerTest.M;
 import com.mastfrog.giulius.tests.Configurations;
 import com.mastfrog.giulius.tests.GuiceRunner;

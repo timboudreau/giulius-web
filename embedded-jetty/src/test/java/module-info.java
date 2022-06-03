@@ -24,6 +24,9 @@ open module com.mastfrog.embedded.jetty {
     // derived from javax.servlet/javax.servlet-api-4.0.1 in javax/servlet/javax.servlet-api/4.0.1/javax.servlet-api-4.0.1.pom
     requires javax.servlet.api;
 
+    // Inferred from test-source-scan
+    requires junit;
+
     // derived from org.eclipse.jetty/jetty-http-0.0.0-? in org/eclipse/jetty/jetty-http/9.4.44.v20210927/jetty-http-9.4.44.v20210927.pom
     requires org.eclipse.jetty.http;
 
@@ -38,4 +41,5 @@ open module com.mastfrog.embedded.jetty {
 
     // derived from org.eclipse.jetty/jetty-webapp-0.0.0-? in org/eclipse/jetty/jetty-webapp/9.4.44.v20210927/jetty-webapp-9.4.44.v20210927.pom
     requires org.eclipse.jetty.webapp;
+
 }
