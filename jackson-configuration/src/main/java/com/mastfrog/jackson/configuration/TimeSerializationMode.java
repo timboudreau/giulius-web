@@ -21,37 +21,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.mastfrog.jackson;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
+package com.mastfrog.jackson.configuration;
 
 /**
+ * Serialization modes that can be passed to JavaTimeConfigurer.
  *
  * @author Tim Boudreau
- * @deprecated Implementation moved to the jackson-configuration library, which
- * does not depend on Guice. Use
- * com.mastfrog.jackson.configuration.JacksonConfigurer.javaTimeConfigurer
- * instead.
  */
-@Deprecated
-public class JavaTimeConfigurer implements JacksonConfigurer {
+public enum TimeSerializationMode {
+    /**
+     * Store timestamps as unix epoch milliseconds.
+     */
+    TIME_AS_EPOCH_MILLIS,
+    /**
+     * Store timestamps as ISO 8601 format strings.
+     */
+    TIME_AS_ISO_STRING,
+    /**
+     * Read and store timestamps in the ISO2822 format used for HTTP headers.
+     * Note that the parser implementation for these is <b>very</b>
+     * permissive, owing to the variety of (mis) interpretations of that spec
+     * that exist. Also note that this format has no provision for milliseconds,
+     * which will be returned as zero.
+     */
+    HTTP_HEADER_FORMAT,
+    /**
+     * Do not configure time serialization (either you don't need it, or
+     * something else is already taking care of that).
+     */
+    NONE;
 
-    // Original implementation is moved to here:
-    private final com.mastfrog.jackson.configuration.JacksonConfigurer delegate;
-
-    public JavaTimeConfigurer() {
-        this(TimeSerializationMode.TIME_AS_EPOCH_MILLIS,
-                DurationSerializationMode.DURATION_AS_MILLIS);
+    public boolean isMillisecondResolution() {
+        return this != HTTP_HEADER_FORMAT;
     }
-
-    public JavaTimeConfigurer(TimeSerializationMode mode, DurationSerializationMode durationMode) {
-        this.delegate = com.mastfrog.jackson.configuration.JacksonConfigurer.javaTimeConfigurer(mode.convert(),
-                durationMode.convert());
-    }
-
-    @Override
-    public ObjectMapper configure(ObjectMapper mapper) {
-        return delegate.configure(mapper);
-    }
-
 }

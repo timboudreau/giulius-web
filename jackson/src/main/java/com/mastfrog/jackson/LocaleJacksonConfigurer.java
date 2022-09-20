@@ -23,21 +23,7 @@
  */
 package com.mastfrog.jackson;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.Version;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.KeyDeserializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.mastfrog.jackson.JacksonConfigurer;
-import com.mastfrog.util.service.ServiceProvider;
-import java.io.IOException;
-import java.util.Locale;
 
 /**
  * By default, Jackson serializes locales using Java constant names, so the
@@ -47,94 +33,13 @@ import java.util.Locale;
  *
  * @author Tim Boudreau
  */
-@ServiceProvider(JacksonConfigurer.class)
 public final class LocaleJacksonConfigurer implements JacksonConfigurer {
 
-    private static final LocaleSerializer LOCALE_SERIALIZER = new LocaleSerializer();
-    private static final LocaleKeySerializer LOCALE_KEY_SERIALIZER = new LocaleKeySerializer();
-    private static final LocaleDeserializer LOCALE_DESERIALIZER = new LocaleDeserializer();
-    private static final LocaleKeyDeserializer LOCALE_KEY_DESERIALIZER = new LocaleKeyDeserializer();
+    private final com.mastfrog.jackson.configuration.impl.LocaleJacksonConfigurer delegate
+            = new com.mastfrog.jackson.configuration.impl.LocaleJacksonConfigurer();
 
     @Override
     public ObjectMapper configure(ObjectMapper om) {
-        SimpleModule sm = new SimpleModule("optional1", new Version(1, 0, 0, null, "com.mastfrog", "java-locale-serializer"));
-        sm.addKeyDeserializer(Locale.class, LOCALE_KEY_DESERIALIZER);
-        sm.addKeySerializer(Locale.class, LOCALE_KEY_SERIALIZER);
-        sm.addDeserializer(Locale.class, LOCALE_DESERIALIZER);
-        sm.addSerializer(Locale.class, LOCALE_SERIALIZER);
-        om.registerModule(sm);
-        return om;
-    }
-
-    private static final class LocaleDeserializer extends JsonDeserializer<Locale> {
-
-        @Override
-        public boolean isCachable() {
-            return true;
-        }
-
-        @Override
-        public Class<?> handledType() {
-            return Locale.class;
-        }
-
-        @Override
-        public Locale deserialize(JsonParser jp, DeserializationContext dc) throws IOException, JsonProcessingException {
-            String string = jp.readValueAs(String.class);
-            if (string.length() > 3 && string.charAt(2) == '_') {
-                // Ensure legacy entries endcoded with _ can be decoded
-                char[] chars = string.toCharArray();
-                chars[2] = '-';
-                string = new String(chars);
-            }
-            return string.isEmpty() ? Locale.ROOT : Locale.forLanguageTag(string);
-        }
-    }
-
-    private static final class LocaleSerializer extends JsonSerializer<Locale> {
-
-        @Override
-        public Class<Locale> handledType() {
-            return Locale.class;
-        }
-
-        @Override
-        public void serialize(Locale t, JsonGenerator jg, SerializerProvider sp) throws IOException,
-                JsonProcessingException {
-            jg.writeString(t.toLanguageTag());
-        }
-    }
-
-    private static final class LocaleKeySerializer extends JsonSerializer<Locale> {
-
-        @Override
-        public Class<Locale> handledType() {
-            return Locale.class;
-        }
-
-        @Override
-        public void serialize(Locale t, JsonGenerator jg, SerializerProvider sp) throws IOException,
-                JsonProcessingException {
-            jg.writeFieldName(t.toLanguageTag());
-        }
-
-    }
-
-    private static final class LocaleKeyDeserializer extends KeyDeserializer {
-
-        @Override
-        public Object deserializeKey(String string, DeserializationContext dc) throws IOException,
-                JsonProcessingException {
-            if (string.isEmpty()) {
-                return Locale.ROOT;
-            }
-            if (string.length() > 3 && string.charAt(2) == '_') {
-                // Ensure legacy entries endcoded with _ can be decoded
-                char[] chars = string.toCharArray();
-                chars[2] = '-';
-                string = new String(chars);
-            }
-            return Locale.forLanguageTag(string);
-        }
+        return delegate.configure(om);
     }
 }

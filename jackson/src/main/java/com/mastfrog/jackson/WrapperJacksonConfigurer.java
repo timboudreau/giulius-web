@@ -1,7 +1,7 @@
 /*
  * The MIT License
  *
- * Copyright 2017 Tim Boudreau.
+ * Copyright 2022 Mastfrog Technologies.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,32 +26,33 @@ package com.mastfrog.jackson;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
+ * Wraps the interface in the new package with the one in the old one.
  *
  * @author Tim Boudreau
- * @deprecated Implementation moved to the jackson-configuration library, which
- * does not depend on Guice. Use
- * com.mastfrog.jackson.configuration.JacksonConfigurer.javaTimeConfigurer
- * instead.
  */
-@Deprecated
-public class JavaTimeConfigurer implements JacksonConfigurer {
+final class WrapperJacksonConfigurer implements JacksonConfigurer, com.mastfrog.jackson.configuration.JacksonConfigurer {
 
-    // Original implementation is moved to here:
-    private final com.mastfrog.jackson.configuration.JacksonConfigurer delegate;
+    private final com.mastfrog.jackson.configuration.JacksonConfigurer orig;
 
-    public JavaTimeConfigurer() {
-        this(TimeSerializationMode.TIME_AS_EPOCH_MILLIS,
-                DurationSerializationMode.DURATION_AS_MILLIS);
-    }
-
-    public JavaTimeConfigurer(TimeSerializationMode mode, DurationSerializationMode durationMode) {
-        this.delegate = com.mastfrog.jackson.configuration.JacksonConfigurer.javaTimeConfigurer(mode.convert(),
-                durationMode.convert());
+    WrapperJacksonConfigurer(com.mastfrog.jackson.configuration.JacksonConfigurer orig) {
+        this.orig = orig;
     }
 
     @Override
-    public ObjectMapper configure(ObjectMapper mapper) {
-        return delegate.configure(mapper);
+    public ObjectMapper configure(ObjectMapper m) {
+        return orig.configure(m);
+    }
+
+    static WrapperJacksonConfigurer wrap(com.mastfrog.jackson.configuration.JacksonConfigurer orig) {
+        return new WrapperJacksonConfigurer(orig);
+    }
+    
+    static boolean wraps(JacksonConfigurer c, Class<?> wrappedType) {
+        if (c instanceof WrapperJacksonConfigurer) {
+            WrapperJacksonConfigurer wjc = (WrapperJacksonConfigurer) c;
+            return wrappedType.isInstance(wjc.orig);
+        }
+        return false;
     }
 
 }

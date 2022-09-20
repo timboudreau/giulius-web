@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.mastfrog.jackson;
+package com.mastfrog.jackson.configuration.impl;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -30,21 +30,25 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.google.common.base.Optional;
+import com.mastfrog.jackson.configuration.JacksonConfigurer;
 import com.mastfrog.util.service.ServiceProvider;
 import java.io.IOException;
+import java.util.Optional;
 
 /**
- * Serialization for the pre-JDK-8 com.google.common.base.Optional class.
+ * Serializes java.util.Optional to its value or null. No deserializer is
+ * provided, so this is one-way. Note, this class is public because it is
+ * registered in META-INF/services. This package will be hidden once this
+ * library begins using the Java Module System.
  *
  * @author Tim Boudreau
  */
 @ServiceProvider(JacksonConfigurer.class)
 public class OptionalSerializer implements JacksonConfigurer {
-    
+
     @Override
     public ObjectMapper configure(ObjectMapper mapper) {
-        SimpleModule sm = new SimpleModule("optional1", new Version(1, 0, 0, null, "com.mastfrog", "com-google-common-base-optional"));
+        SimpleModule sm = new SimpleModule("java-optional", new Version(1, 0, 0, null, "com.mastfrog", "com-google-common-base-optional"));
         sm.addSerializer(new OptionalSer());
         mapper.registerModule(sm);
         return mapper;

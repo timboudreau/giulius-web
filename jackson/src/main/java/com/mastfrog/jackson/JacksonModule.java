@@ -5,6 +5,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
+import static com.mastfrog.jackson.WrapperJacksonConfigurer.wrap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -24,13 +25,15 @@ public final class JacksonModule extends AbstractModule {
 
     private final List<JacksonConfigurer> configurers;
     private final List<Class<? extends JacksonConfigurer>> declarativeConfigurers
-             = new LinkedList<>();
+            = new LinkedList<>();
+    private final List<Class<? extends com.mastfrog.jackson.configuration.JacksonConfigurer>> declarativeConfigurers2
+            = new LinkedList<>();
     private final String bindingName;
 
     /**
      * Create a new JacksonModule which will <i>not</i> load from
-     * meta-inf/services, but only bind the configurers passed here
-     * and any passed later to <code>withConfigurer</code>.
+     * meta-inf/services, but only bind the configurers passed here and any
+     * passed later to <code>withConfigurer</code>.
      *
      * @param configurers An explicit list of jackson configurers
      */
@@ -45,9 +48,9 @@ public final class JacksonModule extends AbstractModule {
     }
 
     /**
-     * Create a JacksonModule which will <i>not</i> look in ServiceLoader
-     * but only bind those configurers passed to it.
-     * 
+     * Create a JacksonModule which will <i>not</i> look in ServiceLoader but
+     * only bind those configurers passed to it.
+     *
      * @param configurers The configurers
      */
     public JacksonModule(JacksonConfigurer... configurers) {
@@ -70,14 +73,14 @@ public final class JacksonModule extends AbstractModule {
 
     /**
      * Create a new JacksonModule which will use ServiceLoader to find instances
-     * of JacksonConfigurer on the classpath, and bind them using 
-     * &#064;Named and thhe passed binding name
-     * 
+     * of JacksonConfigurer on the classpath, and bind them using &#064;Named
+     * and thhe passed binding name
+     *
      * @param bindingName The binding name to make the object mapper available
      * under
      */
     public JacksonModule(String bindingName) {
-        this (bindingName, true);
+        this(bindingName, true);
     }
 
     public JacksonModule(String bindingName, boolean loadFromMetaInfServices) {
@@ -88,13 +91,42 @@ public final class JacksonModule extends AbstractModule {
             this.configurers = new LinkedList<>(Arrays.asList(loadFromMetaInfServices()));
         }
     }
-    
-    public JacksonModule withJavaTimeSerializationMode(TimeSerializationMode timeMode, DurationSerializationMode durationMode) {
+
+    public JacksonModule withJavaTimeSerializationMode(com.mastfrog.jackson.configuration.TimeSerializationMode timeMode, com.mastfrog.jackson.configuration.DurationSerializationMode durationMode) {
         if (timeMode == null) {
-            throw new IllegalArgumentException("Null mode");
+            throw new IllegalArgumentException("Null time mode");
+        }
+        if (durationMode == null) {
+            throw new IllegalArgumentException("Null duration mode");
         }
         for (Iterator<JacksonConfigurer> iter = configurers.iterator(); iter.hasNext();) {
-            if (iter.next() instanceof JavaTimeConfigurer) {
+            JacksonConfigurer cf = iter.next();
+            if (cf instanceof JavaTimeConfigurer) {
+                iter.remove();
+                break;
+            } else if (WrapperJacksonConfigurer.wraps(cf, com.mastfrog.jackson.configuration.impl.JavaTimeConfigurer.class)) {
+                iter.remove();
+                break;
+            }
+        }
+        configurers.add(new JavaTimeConfigurer(TimeSerializationMode.forAlternate(timeMode),
+                DurationSerializationMode.forAlternate(durationMode)));
+        return this;
+    }
+
+    public JacksonModule withJavaTimeSerializationMode(TimeSerializationMode timeMode, DurationSerializationMode durationMode) {
+        if (timeMode == null) {
+            throw new IllegalArgumentException("Null time mode");
+        }
+        if (durationMode == null) {
+            throw new IllegalArgumentException("Null duration mode");
+        }
+        for (Iterator<JacksonConfigurer> iter = configurers.iterator(); iter.hasNext();) {
+            JacksonConfigurer cf = iter.next();
+            if (cf instanceof JavaTimeConfigurer) {
+                iter.remove();
+                break;
+            } else if (WrapperJacksonConfigurer.wraps(cf, com.mastfrog.jackson.configuration.impl.JavaTimeConfigurer.class)) {
                 iter.remove();
                 break;
             }
@@ -108,6 +140,9 @@ public final class JacksonModule extends AbstractModule {
         for (JacksonConfigurer c : ServiceLoader.load(JacksonConfigurer.class)) {
             all.add(c);
         }
+        for (com.mastfrog.jackson.configuration.JacksonConfigurer c : com.mastfrog.jackson.configuration.JacksonConfigurer.metaInfServices()) {
+            all.add(wrap(c));
+        }
         return all.toArray(new JacksonConfigurer[all.size()]);
     }
 
@@ -118,7 +153,15 @@ public final class JacksonModule extends AbstractModule {
         this.configurers.add(configurer);
         return this;
     }
-    
+
+    public JacksonModule withConfigurer(com.mastfrog.jackson.configuration.JacksonConfigurer configurer) {
+        if (configurer == null) {
+            throw new NullPointerException("configurer");
+        }
+        this.configurers.add(wrap(configurer));
+        return this;
+    }
+
     public JacksonModule withConfigurer(Class<? extends JacksonConfigurer> type) {
         if (type == null) {
             throw new NullPointerException("type");
@@ -137,11 +180,34 @@ public final class JacksonModule extends AbstractModule {
             Provider<? extends JacksonConfigurer> p = binder().getProvider(type);
             configurers.add(p);
         }
+        for (Class<? extends com.mastfrog.jackson.configuration.JacksonConfigurer> type : declarativeConfigurers2) {
+            Provider<? extends JacksonConfigurer> p = WrapperProvider.wrapperProvider(binder().getProvider(type));
+            configurers.add(p);
+        }
         if (bindingName != null) {
             bind(ObjectMapper.class).annotatedWith(Names.named(bindingName))
                     .toProvider(new JacksonProvider(configurers));
         } else {
             bind(ObjectMapper.class).toProvider(new JacksonProvider(configurers));
+        }
+    }
+
+    private static class WrapperProvider<T extends com.mastfrog.jackson.configuration.JacksonConfigurer> implements Provider<JacksonConfigurer> {
+
+        private final Provider<T> provider;
+
+        WrapperProvider(Provider<T> type) {
+            this.provider = type;
+        }
+
+        static <T extends com.mastfrog.jackson.configuration.JacksonConfigurer>
+                WrapperProvider<T> wrapperProvider(Provider<T> provider) {
+            return new WrapperProvider<>(provider);
+        }
+
+        @Override
+        public JacksonConfigurer get() {
+            return wrap(provider.get());
         }
     }
 
@@ -151,7 +217,7 @@ public final class JacksonModule extends AbstractModule {
         private ObjectMapper mapper = new ObjectMapper();
         private final AtomicBoolean configured = new AtomicBoolean();
         private final List<Provider<? extends JacksonConfigurer>> providers;
-        
+
         JacksonProvider(List<Provider<? extends JacksonConfigurer>> providers) {
             this.providers = providers;
         }

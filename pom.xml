@@ -33,7 +33,7 @@
         <module>jackson-jodatime</module>
         <module>jackson-mongodb</module>
         <module>email-base</module>
-
+        <module>jackson-configuration</module>
     </modules>
     <issueManagement>
         <system>Github</system>

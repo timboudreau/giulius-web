@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.mastfrog.giulius.tests.GuiceRunner;
 import com.mastfrog.giulius.tests.TestWith;
+import com.mastfrog.jackson.JacksonModuleTest.HttpStringIsoDurationModule;
 import com.mastfrog.jackson.JacksonModuleTest.IsoStringTimeSerializationConfigModule;
 import com.mastfrog.jackson.JacksonModuleTest.MillisTimeSerializationConfigModule;
 import java.io.IOException;
@@ -43,13 +44,15 @@ import org.junit.runner.RunWith;
 import static com.mastfrog.jackson.TimeSerializationMode.TIME_AS_EPOCH_MILLIS;
 import java.time.Duration;
 import java.time.Period;
+import java.time.temporal.ChronoField;
 
 /**
  *
  * @author Tim Boudreau
  */
 @RunWith(GuiceRunner.class)
-@TestWith(iterate = {MillisTimeSerializationConfigModule.class, IsoStringTimeSerializationConfigModule.class})
+@TestWith(iterate = {MillisTimeSerializationConfigModule.class, IsoStringTimeSerializationConfigModule.class,
+    HttpStringIsoDurationModule.class})
 public class JacksonModuleTest {
 
     private static final Instant WHEN = Instant.ofEpochMilli(1496247701503L);
@@ -80,35 +83,57 @@ public class JacksonModuleTest {
         }
     }
 
+    static class HttpStringIsoDurationModule extends AbstractModule {
+
+        @Override
+        protected void configure() {
+            bind(TimeSerializationMode.class).toInstance(TimeSerializationMode.HTTP_HEADER_FORMAT);
+            bind(DurationSerializationMode.class).toInstance(DurationSerializationMode.DURATION_AS_ISO_STRING);
+            install(new JacksonModule()
+                    .withJavaTimeSerializationMode(TimeSerializationMode.HTTP_HEADER_FORMAT,
+                            DurationSerializationMode.DURATION_AS_ISO_STRING));
+        }
+    }
+
+    private static ZonedDateTime when(TimeSerializationMode mode) {
+        ZonedDateTime result = ZonedDateTime.ofInstant(WHEN, ZONE);
+        if (!mode.isMillisecondResolution()) {
+            result = result.with(ChronoField.MILLI_OF_SECOND, 0);
+        }
+        return result;
+    }
+
     @Test
     public void testSerializationAndDeserialization(ObjectMapper m, TimeSerializationMode timeMode, DurationSerializationMode durationMode) throws JsonProcessingException, IOException {
+        System.out.println("\n\n" + timeMode + " " + durationMode);
+        Instant when = when(timeMode).toInstant();
+
 //        System.out.println("\n\n*********************\n\n" + timeMode + "\t" + durationMode + "\n\n");
-        ZonedDateTime zdt = ZonedDateTime.ofInstant(WHEN, ZONE);
-        LocalDateTime ldt = LocalDateTime.ofInstant(WHEN, ZONE);
-        OffsetDateTime odt = OffsetDateTime.ofInstant(WHEN, ZONE).withOffsetSameInstant(ZoneOffset.UTC);
-        ZoneOffset offset = ZONE.getRules().getOffset(WHEN);
-        Duration dur = Duration.between(WHEN, LATER);
+        ZonedDateTime zdt = ZonedDateTime.ofInstant(when, ZONE);
+        LocalDateTime ldt = LocalDateTime.ofInstant(when, ZONE);
+        OffsetDateTime odt = OffsetDateTime.ofInstant(when, ZONE).withOffsetSameInstant(ZoneOffset.UTC);
+        ZoneOffset offset = ZONE.getRules().getOffset(when);
+        Duration dur = Duration.between(when, LATER);
         Period per = Period.of(5, 7, 23);
 
-        assertEquals(WHEN, testOne(ZonedDateTime.class, zdt, m).toInstant());
-        assertEquals(WHEN, testOne(LocalDateTime.class, ldt, m).toInstant(ZONE.getRules().getOffset(WHEN)));
+        assertEquals(when, testOne(ZonedDateTime.class, zdt, m).toInstant());
+        assertEquals(when, testOne(LocalDateTime.class, ldt, m).toInstant(ZONE.getRules().getOffset(WHEN)));
         if (timeMode == TimeSerializationMode.TIME_AS_ISO_STRING) {
-            assertEquals(WHEN, testOne(OffsetDateTime.class, odt, m).toInstant());
+            assertEquals(when, testOne(OffsetDateTime.class, odt, m).toInstant());
         }
-        assertEquals(WHEN, testOne(Instant.class, WHEN, m));
+        assertEquals(when, testOne(Instant.class, when, m));
         assertEquals(ZONE, testOne(ZoneId.class, ZONE, m));
-        assertEquals(ZONE.getRules().getOffset(WHEN), testOne(ZoneOffset.class, offset, m));
+        assertEquals(ZONE.getRules().getOffset(when), testOne(ZoneOffset.class, offset, m));
         assertEquals(dur, testOne(Duration.class, dur, m));
         assertEquals(per, testOne(Period.class, per, m));
     }
 
     private <T> T testOne(Class<T> valueType, T value, ObjectMapper m) throws JsonProcessingException, IOException {
         String serialized = m.writeValueAsString(value);
-//        System.out.println(valueType.getSimpleName() + " -> '" + serialized + "'  = " + value);
         T read = m.readValue(serialized, valueType);
         assertTrue(valueType.isInstance(value));
         assertEquals("Read value  of " + valueType.getSimpleName()
-                + " not equal: " + serialized, value, read);
+                + " not equal: " + serialized + " - should have been " + value, value, read);
 
         return read;
     }

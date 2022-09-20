@@ -21,37 +21,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package com.mastfrog.jackson;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+package com.mastfrog.jackson.configuration;
 
 /**
  *
  * @author Tim Boudreau
- * @deprecated Implementation moved to the jackson-configuration library, which
- * does not depend on Guice. Use
- * com.mastfrog.jackson.configuration.JacksonConfigurer.javaTimeConfigurer
- * instead.
  */
-@Deprecated
-public class JavaTimeConfigurer implements JacksonConfigurer {
-
-    // Original implementation is moved to here:
-    private final com.mastfrog.jackson.configuration.JacksonConfigurer delegate;
-
-    public JavaTimeConfigurer() {
-        this(TimeSerializationMode.TIME_AS_EPOCH_MILLIS,
-                DurationSerializationMode.DURATION_AS_MILLIS);
-    }
-
-    public JavaTimeConfigurer(TimeSerializationMode mode, DurationSerializationMode durationMode) {
-        this.delegate = com.mastfrog.jackson.configuration.JacksonConfigurer.javaTimeConfigurer(mode.convert(),
-                durationMode.convert());
-    }
-
-    @Override
-    public ObjectMapper configure(ObjectMapper mapper) {
-        return delegate.configure(mapper);
-    }
-
+public enum DurationSerializationMode {
+    /**
+     * Store durations as a number of milliseconds.
+     */
+    DURATION_AS_MILLIS,
+    /**
+     * Store duration as a <code>:</code> and <code>.</code> delimited string, e.g.
+     * <code>02:35:10.032</code> for two hours, thirty five minutes, ten 
+     * seconds and 32 milliseconds.
+     */
+    DURATION_AS_STRING,
+    /**
+     * Store durations in the ISO format returned by Duration.toString and
+     * parsed by Duration.parse.
+     */
+    DURATION_AS_ISO_STRING,
+    /**
+     * Do not configure serialization for durations (you have some other
+     * serializer that will do it).
+     */
+    NONE,
 }

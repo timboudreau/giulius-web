@@ -23,49 +23,23 @@
  */
 package com.mastfrog.jackson;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.Version;
-import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.mastfrog.util.service.ServiceProvider;
-import java.io.IOException;
-import java.util.Optional;
 
 /**
+ * One-way serialization for java.util.Optional
  *
  * @author Tim Boudreau
+ * @deprecated Implementation moved to the jackson-configuration library
  */
-@ServiceProvider(JacksonConfigurer.class)
+@Deprecated
 public class OptionalJavaUtilSerializer implements JacksonConfigurer {
+
+    private final com.mastfrog.jackson.configuration.JacksonConfigurer delegate
+            = com.mastfrog.jackson.configuration.JacksonConfigurer.optionalSerializer();
 
     @Override
     public ObjectMapper configure(ObjectMapper mapper) {
-        SimpleModule sm = new SimpleModule("optional2", new Version(1, 0, 1, null, "com.mastfrog", "java-util-optional"));
-        sm.addSerializer(new OptionalSer());
-        mapper.registerModule(sm);
-        return mapper;
-    }
-
-    @SuppressWarnings("unchecked")
-    private static final class OptionalSer extends JsonSerializer<Optional> {
-
-        @Override
-        public Class<Optional> handledType() {
-            return Optional.class;
-        }
-
-        @Override
-        @SuppressWarnings("unchecked")
-        public void serialize(Optional t, JsonGenerator jg, SerializerProvider sp) throws IOException, JsonProcessingException {
-            if (t.isPresent()) {
-                sp.defaultSerializeValue(t.get(), jg);
-            } else {
-                jg.writeNull();
-            }
-        }
+        return delegate.configure(mapper);
     }
 
 }

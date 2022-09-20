@@ -26,14 +26,20 @@ package com.mastfrog.jackson;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Implement this interface and register it using &#064;ServiceProvider
- * to allow it to contribute configuration to Jackson on initialization.
+ * Implement this interface and register it using &#064;ServiceProvider to allow
+ * it to contribute configuration to Jackson on initialization.
  *
  * @author Tim Boudreau
+ * @deprecated Use * @see com.mastfrog.jackson.configuration.JacksonConfigurer
+ * instead - implementations here are now simply wrappers around types defined
+ * in the jackson-configuration library.
  */
+@Deprecated
 public interface JacksonConfigurer {
+
     /**
      * Configure the passed object mapper
+     *
      * @param m The object mapper
      * @return An object mapper
      */
