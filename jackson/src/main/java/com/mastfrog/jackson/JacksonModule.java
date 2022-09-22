@@ -10,6 +10,7 @@ import static com.mastfrog.util.preconditions.Checks.notNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import static java.util.Collections.sort;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -328,6 +329,7 @@ public final class JacksonModule extends AbstractModule {
                 com.mastfrog.jackson.JacksonConfigurer p = provider.get();
                 result.add(p);
             }
+            sort(result);
             return result;
         }
 

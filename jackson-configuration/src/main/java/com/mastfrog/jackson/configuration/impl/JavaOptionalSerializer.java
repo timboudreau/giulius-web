@@ -53,7 +53,13 @@ public class JavaOptionalSerializer implements JacksonConfigurer {
         mapper.registerModule(sm);
         return mapper;
     }
+
+    @Override
+    public int precedence() {
+        return 0;
+    }
     
+    @Override
     public String toString() {
         return "JavaOptionalSerializer";
     }

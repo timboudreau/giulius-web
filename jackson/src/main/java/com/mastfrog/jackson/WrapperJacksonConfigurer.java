@@ -31,7 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Tim Boudreau
  */
 @SuppressWarnings("deprecation")
-final class WrapperJacksonConfigurer implements com.mastfrog.jackson.JacksonConfigurer, com.mastfrog.jackson.configuration.JacksonConfigurer {
+final class WrapperJacksonConfigurer implements com.mastfrog.jackson.JacksonConfigurer {
 
     private final com.mastfrog.jackson.configuration.JacksonConfigurer orig;
 
@@ -46,7 +46,7 @@ final class WrapperJacksonConfigurer implements com.mastfrog.jackson.JacksonConf
     Class<? extends com.mastfrog.jackson.configuration.JacksonConfigurer> origType() {
         return orig.getClass();
     }
-    
+
     public String name() {
         return orig.name();
     }
@@ -68,7 +68,7 @@ final class WrapperJacksonConfigurer implements com.mastfrog.jackson.JacksonConf
         }
         return false;
     }
-    
+
     @Override
     public String toString() {
         return "WrapperJacksonConfigurer(" + orig + ")";

@@ -39,7 +39,7 @@ import java.util.ServiceLoader;
  *
  * @author Tim Boudreau
  */
-public interface JacksonConfigurer {
+public interface JacksonConfigurer extends Comparable<JacksonConfigurer> {
 
     /**
      * Configure the passed object mapper, possibly adding modules or otherwise
@@ -56,6 +56,17 @@ public interface JacksonConfigurer {
     ObjectMapper configure(ObjectMapper m);
 
     /**
+     * Arbitrary ordering for to ensure configurers are applied in a particular
+     * order in the case of a need to override one with another. The default is
+     * 0, which is used by all built-in configurers.
+     *
+     * @return an int
+     */
+    default int precedence() {
+        return 0;
+    }
+
+    /**
      * By default, returns the simple name of the JacksonConfigurer. Do not
      * override unless you are writing a JacksonConfigurer that wrappers another
      * one somehow - this is used to de-duplicate the list of configurers
@@ -66,6 +77,17 @@ public interface JacksonConfigurer {
      */
     default String name() {
         return getClass().getSimpleName();
+    }
+
+    /**
+     * Implements comparison by precedence.
+     *
+     * @param o Another configurer
+     * @return an int
+     */
+    @Override
+    default int compareTo(JacksonConfigurer o) {
+        return Integer.compare(precedence(), o.precedence());
     }
 
     /**
