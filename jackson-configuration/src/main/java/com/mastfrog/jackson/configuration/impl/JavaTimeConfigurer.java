@@ -43,9 +43,14 @@ import com.mastfrog.util.time.TimeUtil;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.MonthDay;
 import java.time.OffsetDateTime;
 import java.time.Period;
+import java.time.Year;
+import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -80,14 +85,21 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
             .appendInstant()
             .toFormatter(Locale.US);
     private static final ZoneId GMT = ZoneId.of("GMT");
+    private final String stringVal; // for logging/debugging
 
     public JavaTimeConfigurer() {
-        this(TimeSerializationMode.TIME_AS_EPOCH_MILLIS, DurationSerializationMode.DURATION_AS_ISO_STRING);
+        this(TimeSerializationMode.TIME_AS_ISO_STRING, DurationSerializationMode.DURATION_AS_ISO_STRING);
     }
 
     public JavaTimeConfigurer(TimeSerializationMode mode, DurationSerializationMode durationMode) {
         this.timeMode = mode;
         this.durationMode = durationMode;
+        stringVal = "JavaTimeConfigurer(" + mode + "," + durationMode + ")";
+    }
+
+    @Override
+    public String toString() {
+        return stringVal;
     }
 
     @Override
@@ -134,6 +146,8 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
                 sm.addDeserializer(LocalDateTime.class, new LocalDateTimeFromLongDeserializer());
                 sm.addSerializer(Instant.class, new InstantToLongSerializer());
                 sm.addDeserializer(Instant.class, new InstantFromLongDeserializer());
+                sm.addSerializer(Date.class, new DateToLongSerializer());
+                sm.addDeserializer(Date.class, new DateFromLongDeserializer());
                 break;
             case TIME_AS_ISO_STRING:
                 sm.addSerializer(ZonedDateTime.class, new ZonedDateTimeToIsoStringSerializer());
@@ -144,6 +158,8 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
                 sm.addDeserializer(LocalDateTime.class, new LocalDateTimeToIsoStringDeserializer());
                 sm.addSerializer(Instant.class, new InstantToIsoStringSerializer());
                 sm.addDeserializer(Instant.class, new InstantToIsoStringDeserializer());
+                sm.addSerializer(Date.class, new DateToIsoStringSerializer());
+                sm.addDeserializer(Date.class, new DateFromIsoStringDeserializer());
                 break;
             case HTTP_HEADER_FORMAT:
                 sm.addSerializer(ZonedDateTime.class, new ZonedDateTimeToHttpHeaderStringSerializer());
@@ -154,6 +170,8 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
                 sm.addDeserializer(LocalDateTime.class, new LocalDateTimeToHttpHeaderStringDeserializer());
                 sm.addSerializer(Instant.class, new InstantToHttpHeaderStringSerializer());
                 sm.addDeserializer(Instant.class, new InstantToHttpHeaderStringDeserializer());
+                sm.addSerializer(Date.class, new DateToHttpHeaderStringSerializer());
+                sm.addDeserializer(Date.class, new DateFromHttpHeaderStringDeserializer());
                 break;
             case NONE:
                 // do nothing
@@ -161,6 +179,16 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
             default:
                 throw new AssertionError(timeMode);
         }
+        sm.addSerializer(MonthDay.class, new MonthDayToIsoStringSerializer());
+        sm.addDeserializer(MonthDay.class, new MonthDayFromIsoStringDeserializer());
+        sm.addSerializer(LocalDate.class, new LocalDateToIsoStringSerializer());
+        sm.addDeserializer(LocalDate.class, new LocalDateFromIsoStringDeserializer());
+        sm.addSerializer(LocalTime.class, new LocalTimeToIsoStringSerializer());
+        sm.addDeserializer(LocalTime.class, new LocalTimeFromIsoStringDeserializer());
+        sm.addSerializer(YearMonth.class, new YearMonthToIsoStringSerializer());
+        sm.addDeserializer(YearMonth.class, new YearMonthFromIsoStringDeserializer());
+        sm.addSerializer(Year.class, new YearToIsoStringSerializer());
+        sm.addDeserializer(Year.class, new YearFromIsoStringDeserializer());
         mapper.registerModule(sm);
         return mapper;
     }
@@ -359,7 +387,7 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         }
     }
 
-    static final class ZoneIdDeserializer extends JsonDeserializer<ZoneId> {
+    private static final class ZoneIdDeserializer extends JsonDeserializer<ZoneId> {
 
         @Override
         public Class<?> handledType() {
@@ -373,7 +401,7 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         }
     }
 
-    static final class ZoneIdSerializer extends JsonSerializer<ZoneId> {
+    private static final class ZoneIdSerializer extends JsonSerializer<ZoneId> {
 
         @Override
         public Class<ZoneId> handledType() {
@@ -386,7 +414,7 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         }
     }
 
-    static final class ZoneOffsetDeserializer extends JsonDeserializer<ZoneOffset> {
+    private static final class ZoneOffsetDeserializer extends JsonDeserializer<ZoneOffset> {
 
         @Override
         public Class<?> handledType() {
@@ -400,7 +428,7 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         }
     }
 
-    static final class ZoneOffsetSerializer extends JsonSerializer<ZoneOffset> {
+    private static final class ZoneOffsetSerializer extends JsonSerializer<ZoneOffset> {
 
         @Override
         public Class<ZoneOffset> handledType() {
@@ -413,7 +441,34 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         }
     }
 
-    static final class ZonedDateTimeToIsoStringSerializer extends JsonSerializer<ZonedDateTime> {
+    private static final class DateToIsoStringSerializer extends JsonSerializer<Date> {
+
+        @Override
+        public Class<Date> handledType() {
+            return Date.class;
+        }
+
+        @Override
+        public void serialize(Date t, JsonGenerator jg, SerializerProvider sp) throws IOException, JsonProcessingException {
+            String formatted = ISO_INSTANT.format(Instant.ofEpochMilli(t.getTime()));
+            sp.defaultSerializeValue(formatted, jg);
+        }
+    }
+
+    private static final class DateToLongSerializer extends JsonSerializer<Date> {
+
+        @Override
+        public Class<Date> handledType() {
+            return Date.class;
+        }
+
+        @Override
+        public void serialize(Date t, JsonGenerator jg, SerializerProvider sp) throws IOException, JsonProcessingException {
+            sp.defaultSerializeValue(t.getTime(), jg);
+        }
+    }
+
+    private static final class ZonedDateTimeToIsoStringSerializer extends JsonSerializer<ZonedDateTime> {
 
         @Override
         public Class<ZonedDateTime> handledType() {
@@ -428,7 +483,40 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
 
     }
 
-    static final class ZonedDateTimeToIsoStringDeserializer extends JsonDeserializer<ZonedDateTime> {
+    private static final class DateFromLongDeserializer extends JsonDeserializer<Date> {
+
+        @Override
+        public Class<?> handledType() {
+            return Date.class;
+        }
+
+        @Override
+        public Date deserialize(JsonParser jp, DeserializationContext dc) throws IOException, JsonProcessingException {
+            long epochMillis = jp.readValueAs(Long.TYPE);
+            return new Date(epochMillis);
+        }
+    }
+
+    private static final class DateFromIsoStringDeserializer extends JsonDeserializer<Date> {
+
+        @Override
+        public Class<?> handledType() {
+            return Date.class;
+        }
+
+        @Override
+        public Date deserialize(JsonParser jp, DeserializationContext dc) throws IOException, JsonProcessingException {
+            if (jp.currentToken().isNumeric()) {
+                long epochMillis = jp.readValueAs(Long.TYPE);
+                return new Date(epochMillis);
+            }
+            String timestamp = jp.readValueAs(String.class);
+            Instant inst = Instant.parse(timestamp);
+            return new Date(inst.toEpochMilli());
+        }
+    }
+
+    private static final class ZonedDateTimeToIsoStringDeserializer extends JsonDeserializer<ZonedDateTime> {
 
         @Override
         public Class<?> handledType() {
@@ -447,7 +535,7 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         }
     }
 
-    static final class OffsetDateTimeToIsoStringDeserializer extends JsonDeserializer<OffsetDateTime> {
+    private static final class OffsetDateTimeToIsoStringDeserializer extends JsonDeserializer<OffsetDateTime> {
 
         @Override
         public Class<?> handledType() {
@@ -457,12 +545,11 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         @Override
         public OffsetDateTime deserialize(JsonParser jp, DeserializationContext dc) throws IOException, JsonProcessingException {
             String timestamp = jp.readValueAs(String.class);
-            Instant inst = Instant.parse(timestamp);
-            return OffsetDateTime.ofInstant(inst, GMT);
+            return OffsetDateTime.parse(timestamp);
         }
     }
 
-    static final class OffsetDateTimeToIsoStringSerializer extends JsonSerializer<OffsetDateTime> {
+    private static final class OffsetDateTimeToIsoStringSerializer extends JsonSerializer<OffsetDateTime> {
 
         @Override
         public Class<OffsetDateTime> handledType() {
@@ -476,7 +563,7 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         }
     }
 
-    static final class InstantToIsoStringDeserializer extends JsonDeserializer<Instant> {
+    private static final class InstantToIsoStringDeserializer extends JsonDeserializer<Instant> {
 
         @Override
         public Class<?> handledType() {
@@ -490,7 +577,7 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         }
     }
 
-    static final class InstantToHttpHeaderStringDeserializer extends JsonDeserializer<Instant> {
+    private static final class InstantToHttpHeaderStringDeserializer extends JsonDeserializer<Instant> {
 
         @Override
         public Class<?> handledType() {
@@ -505,7 +592,22 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         }
     }
 
-    static final class ZonedDateTimeToHttpHeaderStringDeserializer extends JsonDeserializer<ZonedDateTime> {
+    private static final class DateFromHttpHeaderStringDeserializer extends JsonDeserializer<Date> {
+
+        @Override
+        public Class<?> handledType() {
+            return Date.class;
+        }
+
+        @Override
+        public Date deserialize(JsonParser jp, DeserializationContext dc) throws IOException, JsonProcessingException {
+            String timestamp = jp.readValueAs(String.class);
+            ZonedDateTime zdt = parseZonedDateTime(timestamp);
+            return new Date(zdt.toInstant().toEpochMilli());
+        }
+    }
+
+    private static final class ZonedDateTimeToHttpHeaderStringDeserializer extends JsonDeserializer<ZonedDateTime> {
 
         @Override
         public Class<?> handledType() {
@@ -519,7 +621,7 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         }
     }
 
-    static final class OffsetDateTimeToHttpHeaderStringDeserializer extends JsonDeserializer<OffsetDateTime> {
+    private static final class OffsetDateTimeToHttpHeaderStringDeserializer extends JsonDeserializer<OffsetDateTime> {
 
         @Override
         public Class<?> handledType() {
@@ -533,7 +635,7 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         }
     }
 
-    static final class LocalDateTimeToHttpHeaderStringDeserializer extends JsonDeserializer<LocalDateTime> {
+    private static final class LocalDateTimeToHttpHeaderStringDeserializer extends JsonDeserializer<LocalDateTime> {
 
         @Override
         public Class<?> handledType() {
@@ -547,7 +649,7 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         }
     }
 
-    static final class InstantToIsoStringSerializer extends JsonSerializer<Instant> {
+    private static final class InstantToIsoStringSerializer extends JsonSerializer<Instant> {
 
         @Override
         public Class<Instant> handledType() {
@@ -560,7 +662,7 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         }
     }
 
-    static final class InstantToHttpHeaderStringSerializer extends JsonSerializer<Instant> {
+    private static final class InstantToHttpHeaderStringSerializer extends JsonSerializer<Instant> {
 
         @Override
         public Class<Instant> handledType() {
@@ -574,7 +676,21 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         }
     }
 
-    static final class ZonedDateTimeToHttpHeaderStringSerializer extends JsonSerializer<ZonedDateTime> {
+    private static final class DateToHttpHeaderStringSerializer extends JsonSerializer<Date> {
+
+        @Override
+        public Class<Date> handledType() {
+            return Date.class;
+        }
+
+        @Override
+        public void serialize(Date t, JsonGenerator jg, SerializerProvider sp) throws IOException, JsonProcessingException {
+            ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.ofEpochMilli(t.getTime()), GMT);
+            sp.defaultSerializeValue(zdt.format(ISO2822DateFormat), jg);
+        }
+    }
+
+    private static final class ZonedDateTimeToHttpHeaderStringSerializer extends JsonSerializer<ZonedDateTime> {
 
         @Override
         public Class<ZonedDateTime> handledType() {
@@ -587,7 +703,7 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         }
     }
 
-    static final class OffsetDateTimeToHttpHeaderStringSerializer extends JsonSerializer<OffsetDateTime> {
+    private static final class OffsetDateTimeToHttpHeaderStringSerializer extends JsonSerializer<OffsetDateTime> {
 
         @Override
         public Class<OffsetDateTime> handledType() {
@@ -600,7 +716,7 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         }
     }
 
-    static final class LocalDateTimeToHttpHeaderStringSerializer extends JsonSerializer<LocalDateTime> {
+    private static final class LocalDateTimeToHttpHeaderStringSerializer extends JsonSerializer<LocalDateTime> {
 
         @Override
         public Class<LocalDateTime> handledType() {
@@ -614,7 +730,7 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         }
     }
 
-    static final class LocalDateTimeToIsoStringDeserializer extends JsonDeserializer<LocalDateTime> {
+    private static final class LocalDateTimeToIsoStringDeserializer extends JsonDeserializer<LocalDateTime> {
 
         @Override
         public Class<?> handledType() {
@@ -628,7 +744,7 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         }
     }
 
-    static final class LocalDateTimeToIsoStringSerializer extends JsonSerializer<LocalDateTime> {
+    private static final class LocalDateTimeToIsoStringSerializer extends JsonSerializer<LocalDateTime> {
 
         @Override
         public Class<LocalDateTime> handledType() {
@@ -642,7 +758,147 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         }
     }
 
-    static final class PeriodSerializer extends JsonSerializer<Period> {
+    private static final class MonthDayFromIsoStringDeserializer extends JsonDeserializer<MonthDay> {
+
+        @Override
+        public Class<?> handledType() {
+            return MonthDay.class;
+        }
+
+        @Override
+        public MonthDay deserialize(JsonParser jp, DeserializationContext dc) throws IOException, JsonProcessingException {
+            String timestamp = jp.readValueAs(String.class);
+            return MonthDay.parse(timestamp);
+        }
+    }
+
+    private static final class MonthDayToIsoStringSerializer extends JsonSerializer<MonthDay> {
+
+        @Override
+        public Class<MonthDay> handledType() {
+            return MonthDay.class;
+        }
+
+        @Override
+        public void serialize(MonthDay t, JsonGenerator jg, SerializerProvider sp) throws IOException, JsonProcessingException {
+            String fmt = t.toString();
+            sp.defaultSerializeValue(fmt, jg);
+        }
+    }
+
+    private static final class LocalDateFromIsoStringDeserializer extends JsonDeserializer<LocalDate> {
+
+        @Override
+        public Class<?> handledType() {
+            return LocalDate.class;
+        }
+
+        @Override
+        public LocalDate deserialize(JsonParser jp, DeserializationContext dc) throws IOException, JsonProcessingException {
+            String timestamp = jp.readValueAs(String.class);
+            return LocalDate.parse(timestamp, DateTimeFormatter.ISO_LOCAL_DATE);
+        }
+    }
+
+    private static final class LocalDateToIsoStringSerializer extends JsonSerializer<LocalDate> {
+
+        @Override
+        public Class<LocalDate> handledType() {
+            return LocalDate.class;
+        }
+
+        @Override
+        public void serialize(LocalDate t, JsonGenerator jg, SerializerProvider sp) throws IOException, JsonProcessingException {
+            String fmt = t.format(DateTimeFormatter.ISO_LOCAL_DATE);
+            sp.defaultSerializeValue(fmt, jg);
+        }
+    }
+
+    private static final class LocalTimeFromIsoStringDeserializer extends JsonDeserializer<LocalTime> {
+
+        @Override
+        public Class<?> handledType() {
+            return LocalTime.class;
+        }
+
+        @Override
+        public LocalTime deserialize(JsonParser jp, DeserializationContext dc) throws IOException, JsonProcessingException {
+            String timestamp = jp.readValueAs(String.class);
+            return LocalTime.parse(timestamp, DateTimeFormatter.ISO_LOCAL_TIME);
+        }
+    }
+
+    private static final class LocalTimeToIsoStringSerializer extends JsonSerializer<LocalTime> {
+
+        @Override
+        public Class<LocalTime> handledType() {
+            return LocalTime.class;
+        }
+
+        @Override
+        public void serialize(LocalTime t, JsonGenerator jg, SerializerProvider sp) throws IOException, JsonProcessingException {
+            String fmt = t.format(DateTimeFormatter.ISO_LOCAL_TIME);
+            sp.defaultSerializeValue(fmt, jg);
+        }
+    }
+
+    private static final class YearMonthFromIsoStringDeserializer extends JsonDeserializer<YearMonth> {
+
+        @Override
+        public Class<?> handledType() {
+            return YearMonth.class;
+        }
+
+        @Override
+        public YearMonth deserialize(JsonParser jp, DeserializationContext dc) throws IOException, JsonProcessingException {
+            String timestamp = jp.readValueAs(String.class);
+            return YearMonth.parse(timestamp);
+        }
+    }
+
+    private static final class YearMonthToIsoStringSerializer extends JsonSerializer<YearMonth> {
+
+        @Override
+        public Class<YearMonth> handledType() {
+            return YearMonth.class;
+        }
+
+        @Override
+        public void serialize(YearMonth t, JsonGenerator jg, SerializerProvider sp) throws IOException, JsonProcessingException {
+            String fmt = t.toString();
+            sp.defaultSerializeValue(fmt, jg);
+        }
+    }
+
+    private static final class YearFromIsoStringDeserializer extends JsonDeserializer<Year> {
+
+        @Override
+        public Class<?> handledType() {
+            return Year.class;
+        }
+
+        @Override
+        public Year deserialize(JsonParser jp, DeserializationContext dc) throws IOException, JsonProcessingException {
+            String timestamp = jp.readValueAs(String.class);
+            return Year.parse(timestamp);
+        }
+    }
+
+    private static final class YearToIsoStringSerializer extends JsonSerializer<Year> {
+
+        @Override
+        public Class<Year> handledType() {
+            return Year.class;
+        }
+
+        @Override
+        public void serialize(Year t, JsonGenerator jg, SerializerProvider sp) throws IOException, JsonProcessingException {
+            String fmt = t.toString();
+            sp.defaultSerializeValue(fmt, jg);
+        }
+    }
+
+    private static final class PeriodSerializer extends JsonSerializer<Period> {
 
         @Override
         public Class<Period> handledType() {
@@ -662,7 +918,7 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         }
     }
 
-    static final class PeriodDeserializer extends JsonDeserializer<Period> {
+    private static final class PeriodDeserializer extends JsonDeserializer<Period> {
 
         @Override
         public Class<?> handledType() {
@@ -695,7 +951,7 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         }
     }
 
-    static final class CompactPeriodSerializer extends JsonSerializer<Period> {
+    private static final class CompactPeriodSerializer extends JsonSerializer<Period> {
 
         @Override
         public Class<Period> handledType() {
@@ -712,7 +968,7 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
         }
     }
 
-    static final class CompactPeriodDeserializer extends JsonDeserializer<Period> {
+    private static final class CompactPeriodDeserializer extends JsonDeserializer<Period> {
 
         private static final Pattern PAT = Pattern.compile("P(\\d+)Y(\\d+)M(\\d+)D");
 

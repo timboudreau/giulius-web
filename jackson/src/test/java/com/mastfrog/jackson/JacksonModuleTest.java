@@ -41,10 +41,13 @@ import java.time.ZonedDateTime;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.runner.RunWith;
-import static com.mastfrog.jackson.TimeSerializationMode.TIME_AS_EPOCH_MILLIS;
+import static com.mastfrog.jackson.configuration.TimeSerializationMode.TIME_AS_EPOCH_MILLIS;
+import com.mastfrog.jackson.configuration.TimeSerializationMode;
+import com.mastfrog.jackson.configuration.DurationSerializationMode;
 import java.time.Duration;
 import java.time.Period;
 import java.time.temporal.ChronoField;
+import java.util.Date;
 
 /**
  *
@@ -89,7 +92,7 @@ public class JacksonModuleTest {
         protected void configure() {
             bind(TimeSerializationMode.class).toInstance(TimeSerializationMode.HTTP_HEADER_FORMAT);
             bind(DurationSerializationMode.class).toInstance(DurationSerializationMode.DURATION_AS_ISO_STRING);
-            install(new JacksonModule()
+            install(new JacksonModule(false)
                     .withJavaTimeSerializationMode(TimeSerializationMode.HTTP_HEADER_FORMAT,
                             DurationSerializationMode.DURATION_AS_ISO_STRING));
         }
@@ -105,10 +108,9 @@ public class JacksonModuleTest {
 
     @Test
     public void testSerializationAndDeserialization(ObjectMapper m, TimeSerializationMode timeMode, DurationSerializationMode durationMode) throws JsonProcessingException, IOException {
-        System.out.println("\n\n" + timeMode + " " + durationMode);
         Instant when = when(timeMode).toInstant();
 
-//        System.out.println("\n\n*********************\n\n" + timeMode + "\t" + durationMode + "\n\n");
+        Date date = new Date(when.toEpochMilli());
         ZonedDateTime zdt = ZonedDateTime.ofInstant(when, ZONE);
         LocalDateTime ldt = LocalDateTime.ofInstant(when, ZONE);
         OffsetDateTime odt = OffsetDateTime.ofInstant(when, ZONE).withOffsetSameInstant(ZoneOffset.UTC);
@@ -116,6 +118,7 @@ public class JacksonModuleTest {
         Duration dur = Duration.between(when, LATER);
         Period per = Period.of(5, 7, 23);
 
+        assertEquals(when, testOne(Date.class, date, m).toInstant());
         assertEquals(when, testOne(ZonedDateTime.class, zdt, m).toInstant());
         assertEquals(when, testOne(LocalDateTime.class, ldt, m).toInstant(ZONE.getRules().getOffset(WHEN)));
         if (timeMode == TimeSerializationMode.TIME_AS_ISO_STRING) {
@@ -132,8 +135,22 @@ public class JacksonModuleTest {
         String serialized = m.writeValueAsString(value);
         T read = m.readValue(serialized, valueType);
         assertTrue(valueType.isInstance(value));
-        assertEquals("Read value  of " + valueType.getSimpleName()
-                + " not equal: " + serialized + " - should have been " + value, value, read);
+
+        if (value instanceof OffsetDateTime) {
+            OffsetDateTime odt = (OffsetDateTime) value;
+            OffsetDateTime r = (OffsetDateTime) read;
+            assertEquals("Read value  of " + valueType.getSimpleName()
+                    + " not equal: " + serialized + " - should have been " + value
+                    + " actual value type " + value.getClass().getSimpleName(),
+                    odt.toInstant().toEpochMilli(),
+                    r.toInstant().toEpochMilli());
+        } else {
+            assertEquals("Read value  of " + valueType.getSimpleName()
+                    + " not equal: " + serialized + " - should have been " + value
+                    + " actual value type " + value.getClass().getSimpleName(),
+                    value,
+                    read);
+        }
 
         return read;
     }

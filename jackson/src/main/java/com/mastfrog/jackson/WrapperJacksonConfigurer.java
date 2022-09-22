@@ -30,12 +30,25 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  *
  * @author Tim Boudreau
  */
-final class WrapperJacksonConfigurer implements JacksonConfigurer, com.mastfrog.jackson.configuration.JacksonConfigurer {
+@SuppressWarnings("deprecation")
+final class WrapperJacksonConfigurer implements com.mastfrog.jackson.JacksonConfigurer, com.mastfrog.jackson.configuration.JacksonConfigurer {
 
     private final com.mastfrog.jackson.configuration.JacksonConfigurer orig;
 
     WrapperJacksonConfigurer(com.mastfrog.jackson.configuration.JacksonConfigurer orig) {
         this.orig = orig;
+    }
+
+    com.mastfrog.jackson.configuration.JacksonConfigurer orig() {
+        return orig;
+    }
+
+    Class<? extends com.mastfrog.jackson.configuration.JacksonConfigurer> origType() {
+        return orig.getClass();
+    }
+    
+    public String name() {
+        return orig.name();
     }
 
     @Override
@@ -46,13 +59,19 @@ final class WrapperJacksonConfigurer implements JacksonConfigurer, com.mastfrog.
     static WrapperJacksonConfigurer wrap(com.mastfrog.jackson.configuration.JacksonConfigurer orig) {
         return new WrapperJacksonConfigurer(orig);
     }
-    
-    static boolean wraps(JacksonConfigurer c, Class<?> wrappedType) {
+
+    @SuppressWarnings("deprecation")
+    static boolean wraps(com.mastfrog.jackson.JacksonConfigurer c, Class<?> wrappedType) {
         if (c instanceof WrapperJacksonConfigurer) {
             WrapperJacksonConfigurer wjc = (WrapperJacksonConfigurer) c;
             return wrappedType.isInstance(wjc.orig);
         }
         return false;
+    }
+    
+    @Override
+    public String toString() {
+        return "WrapperJacksonConfigurer(" + orig + ")";
     }
 
 }

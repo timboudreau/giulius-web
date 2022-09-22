@@ -31,7 +31,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.base.Optional;
-import com.mastfrog.util.service.ServiceProvider;
 import java.io.IOException;
 
 /**
@@ -39,15 +38,20 @@ import java.io.IOException;
  *
  * @author Tim Boudreau
  */
-@ServiceProvider(JacksonConfigurer.class)
-public class OptionalSerializer implements JacksonConfigurer {
-    
+@SuppressWarnings("deprecation")
+public class OptionalSerializer implements com.mastfrog.jackson.JacksonConfigurer {
+
     @Override
     public ObjectMapper configure(ObjectMapper mapper) {
         SimpleModule sm = new SimpleModule("optional1", new Version(1, 0, 0, null, "com.mastfrog", "com-google-common-base-optional"));
         sm.addSerializer(new OptionalSer());
         mapper.registerModule(sm);
         return mapper;
+    }
+    
+    @Override
+    public String toString() {
+        return "GuavaOptionalSerializer";
     }
 
     @SuppressWarnings("unchecked")

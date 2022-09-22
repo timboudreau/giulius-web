@@ -32,7 +32,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @deprecated Implementation moved to the jackson-configuration library
  */
 @Deprecated
-public class OptionalJavaUtilSerializer implements JacksonConfigurer {
+@SuppressWarnings("deprecation")
+public class OptionalJavaUtilSerializer implements com.mastfrog.jackson.JacksonConfigurer {
 
     private final com.mastfrog.jackson.configuration.JacksonConfigurer delegate
             = com.mastfrog.jackson.configuration.JacksonConfigurer.optionalSerializer();
@@ -42,4 +43,8 @@ public class OptionalJavaUtilSerializer implements JacksonConfigurer {
         return delegate.configure(mapper);
     }
 
+    @Override
+    public String name() {
+        return delegate.name();
+    }
 }

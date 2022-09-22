@@ -44,4 +44,17 @@ public interface JacksonConfigurer {
      * @return An object mapper
      */
     public ObjectMapper configure(ObjectMapper m);
+    
+    /**
+     * By default, returns the simple name of the JacksonConfigurer.  Do
+     * not override unless you are writing a JacksonConfigurer that wrappers
+     * another one somehow - this is used to de-duplicate the list of 
+     * configurers configured in JacksonModule, to ensure there is only
+     * one configuration for a given set of types present.
+     * 
+     * @return A name
+     */
+    default String name() {
+        return getClass().getSimpleName();
+    }
 }

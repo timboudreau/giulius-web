@@ -67,6 +67,10 @@ public final class LocaleJacksonConfigurer implements JacksonConfigurer {
         om.registerModule(sm);
         return om;
     }
+    
+    public String toString() {
+        return "LocaleJacksonConfigurer";
+    }
 
     private static final class LocaleDeserializer extends JsonDeserializer<Locale> {
 
@@ -83,13 +87,8 @@ public final class LocaleJacksonConfigurer implements JacksonConfigurer {
         @Override
         public Locale deserialize(JsonParser jp, DeserializationContext dc) throws IOException, JsonProcessingException {
             String string = jp.readValueAs(String.class);
-            if (string.length() > 3 && string.charAt(2) == '_') {
-                // Ensure legacy entries endcoded with _ can be decoded
-                char[] chars = string.toCharArray();
-                chars[2] = '-';
-                string = new String(chars);
-            }
-            return string.isEmpty() ? Locale.ROOT : Locale.forLanguageTag(string);
+            return string.isEmpty() ? Locale.ROOT 
+                    : Locale.forLanguageTag(replaceUnderscore(string));
         }
     }
 
@@ -130,13 +129,17 @@ public final class LocaleJacksonConfigurer implements JacksonConfigurer {
             if (string.isEmpty()) {
                 return Locale.ROOT;
             }
+            return Locale.forLanguageTag(replaceUnderscore(string));
+        }
+    }
+    
+    static String replaceUnderscore(String string) {
             if (string.length() > 3 && string.charAt(2) == '_') {
                 // Ensure legacy entries endcoded with _ can be decoded
                 char[] chars = string.toCharArray();
                 chars[2] = '-';
                 string = new String(chars);
             }
-            return Locale.forLanguageTag(string);
-        }
+            return string;
     }
 }

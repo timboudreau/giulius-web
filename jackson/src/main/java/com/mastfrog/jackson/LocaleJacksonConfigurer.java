@@ -32,8 +32,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * serialized correctly both as keys and values.
  *
  * @author Tim Boudreau
+ * @deprecated implementation moved to jackson-configurers library
  */
-public final class LocaleJacksonConfigurer implements JacksonConfigurer {
+@SuppressWarnings("deprecation")
+@Deprecated
+public final class LocaleJacksonConfigurer implements com.mastfrog.jackson.JacksonConfigurer {
 
     private final com.mastfrog.jackson.configuration.impl.LocaleJacksonConfigurer delegate
             = new com.mastfrog.jackson.configuration.impl.LocaleJacksonConfigurer();
@@ -42,4 +45,15 @@ public final class LocaleJacksonConfigurer implements JacksonConfigurer {
     public ObjectMapper configure(ObjectMapper om) {
         return delegate.configure(om);
     }
+
+    @Override
+    public String toString() {
+        return "LJC(" + delegate + ")";
+    }
+
+    @Override
+    public String name() {
+        return delegate.name();
+    }
+
 }

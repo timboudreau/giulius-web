@@ -26,7 +26,7 @@ package com.mastfrog.jackson.configuration;
 import com.mastfrog.jackson.configuration.impl.JavaTimeConfigurer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mastfrog.jackson.configuration.impl.LocaleJacksonConfigurer;
-import com.mastfrog.jackson.configuration.impl.OptionalSerializer;
+import com.mastfrog.jackson.configuration.impl.JavaOptionalSerializer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -34,20 +34,36 @@ import java.util.ServiceLoader;
 
 /**
  * Implement this interface and register it using &#064;ServiceProvider to allow
- * it to contribute configuration to Jackson on initialization.
+ * it to contribute configuration to Jackson on initialization, or if using
+ * JacksonModule with guice, pass it or its type to one of the methods there.
  *
  * @author Tim Boudreau
  */
 public interface JacksonConfigurer {
 
     /**
-     * Configure the passed object mapper
+     * Configure the passed object mapper, possibly adding modules or otherwise
+     * altering its configuration. Note that ObjectMapper is stateful because it
+     * can be configured on the fly - if you are writing something that hands
+     * out ObjectMappers using dependency injector or similar, which is
+     * configured with some JacksonConfigurers, always use <code>copy()</code>
+     * to return a configured instance so the code you call cannot interfere
+     * with other uses of ObjectMapper in the application.
      *
      * @param m The object mapper
-     * @return An object mapper
+     * @return The same object mapper, ideally
      */
     ObjectMapper configure(ObjectMapper m);
 
+    /**
+     * By default, returns the simple name of the JacksonConfigurer. Do not
+     * override unless you are writing a JacksonConfigurer that wrappers another
+     * one somehow - this is used to de-duplicate the list of configurers
+     * configured in JacksonModule, to ensure there is only one configuration
+     * for a given set of types present.
+     *
+     * @return A name
+     */
     default String name() {
         return getClass().getSimpleName();
     }
@@ -111,7 +127,7 @@ public interface JacksonConfigurer {
      * @return A configurer
      */
     public static JacksonConfigurer optionalSerializer() {
-        return new OptionalSerializer();
+        return new JavaOptionalSerializer();
     }
 
     /**
@@ -138,6 +154,13 @@ public interface JacksonConfigurer {
         return apply(orig, metaInfServices());
     }
 
+    /**
+     * Convenience method to apply a bunch of configurers to an ObjectMapper.
+     *
+     * @param mapper A mapper
+     * @param configs some configurers
+     * @return the object mapper
+     */
     public static ObjectMapper apply(ObjectMapper mapper, Iterable<? extends JacksonConfigurer> configs) {
         for (JacksonConfigurer cf : configs) {
             mapper = cf.configure(mapper);
@@ -145,6 +168,13 @@ public interface JacksonConfigurer {
         return mapper;
     }
 
+    /**
+     * Convenience method to apply a bunch of configurers to an ObjectMapper.
+     *
+     * @param mapper A mapper
+     * @param configs some configurers
+     * @return the object mapper
+     */
     public static ObjectMapper apply(ObjectMapper mapper, JacksonConfigurer... configs) {
         for (JacksonConfigurer cf : configs) {
             mapper = cf.configure(mapper);

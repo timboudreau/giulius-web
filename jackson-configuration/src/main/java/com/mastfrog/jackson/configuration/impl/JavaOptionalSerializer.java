@@ -44,7 +44,7 @@ import java.util.Optional;
  * @author Tim Boudreau
  */
 @ServiceProvider(JacksonConfigurer.class)
-public class OptionalSerializer implements JacksonConfigurer {
+public class JavaOptionalSerializer implements JacksonConfigurer {
 
     @Override
     public ObjectMapper configure(ObjectMapper mapper) {
@@ -52,6 +52,10 @@ public class OptionalSerializer implements JacksonConfigurer {
         sm.addSerializer(new OptionalSer());
         mapper.registerModule(sm);
         return mapper;
+    }
+    
+    public String toString() {
+        return "JavaOptionalSerializer";
     }
 
     @SuppressWarnings("unchecked")

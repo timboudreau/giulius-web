@@ -6,12 +6,16 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 import static com.mastfrog.jackson.WrapperJacksonConfigurer.wrap;
+import static com.mastfrog.util.preconditions.Checks.notNull;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ServiceLoader;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -23,8 +27,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public final class JacksonModule extends AbstractModule {
 
-    private final List<JacksonConfigurer> configurers;
-    private final List<Class<? extends JacksonConfigurer>> declarativeConfigurers
+    @SuppressWarnings("deprecation")
+    private final List<com.mastfrog.jackson.JacksonConfigurer> configurers;
+    @SuppressWarnings("deprecation")
+    private final List<Class<? extends com.mastfrog.jackson.JacksonConfigurer>> declarativeConfigurers
             = new LinkedList<>();
     private final List<Class<? extends com.mastfrog.jackson.configuration.JacksonConfigurer>> declarativeConfigurers2
             = new LinkedList<>();
@@ -37,9 +43,10 @@ public final class JacksonModule extends AbstractModule {
      *
      * @param configurers An explicit list of jackson configurers
      */
-    public JacksonModule(String bindingName, JacksonConfigurer... configurers) {
+    @SuppressWarnings("deprecation")
+    public JacksonModule(String bindingName, com.mastfrog.jackson.JacksonConfigurer... configurers) {
         this.bindingName = bindingName;
-        for (JacksonConfigurer c : configurers) {
+        for (com.mastfrog.jackson.JacksonConfigurer c : configurers) {
             if (c == null) {
                 throw new IllegalArgumentException("Null configurer");
             }
@@ -53,8 +60,9 @@ public final class JacksonModule extends AbstractModule {
      *
      * @param configurers The configurers
      */
-    public JacksonModule(JacksonConfigurer... configurers) {
-        for (JacksonConfigurer c : configurers) {
+    @SuppressWarnings("deprecation")
+    public JacksonModule(com.mastfrog.jackson.JacksonConfigurer... configurers) {
+        for (com.mastfrog.jackson.JacksonConfigurer c : configurers) {
             if (c == null) {
                 throw new IllegalArgumentException("Null configurer");
             }
@@ -83,15 +91,67 @@ public final class JacksonModule extends AbstractModule {
         this(bindingName, true);
     }
 
+    public JacksonModule(boolean loadFromMetaInfServices) {
+        this(null, loadFromMetaInfServices);
+    }
+
     public JacksonModule(String bindingName, boolean loadFromMetaInfServices) {
         this.bindingName = bindingName;
         if (!loadFromMetaInfServices) {
             this.configurers = new LinkedList<>();
         } else {
-            this.configurers = new LinkedList<>(Arrays.asList(loadFromMetaInfServices()));
+            this.configurers = new LinkedList<>(metaInfServices());
         }
     }
 
+    /**
+     * Add declarative meta-inf-services configurers from this library <i>and
+     * the jackson-configuration</i> library, with the following caveat: If an
+     * instance of the same type as one defined in meta-inf-services is already
+     * present, do not replace the existing instance.
+     * <p>
+     * Where possible, prefer the constructor argument, which loads these ahead
+     * of others.
+     * </p>
+     *
+     * @return this
+     */
+    @SuppressWarnings("deprecation")
+    public JacksonModule loadFromMetaInfServices() {
+        Set<Class<?>> classes = new HashSet<>();
+        classes.addAll(declarativeConfigurers);
+        classes.addAll(declarativeConfigurers2);
+        for (com.mastfrog.jackson.JacksonConfigurer jc : configurers) {
+            if (jc instanceof WrapperJacksonConfigurer) {
+                classes.add(((WrapperJacksonConfigurer) jc).origType());
+            } else {
+                classes.add(jc.getClass());
+            }
+            if (jc instanceof com.mastfrog.jackson.JavaTimeConfigurer) {
+                classes.add(com.mastfrog.jackson.configuration.impl.JavaTimeConfigurer.class);
+            }
+        }
+        for (com.mastfrog.jackson.configuration.JacksonConfigurer jc : com.mastfrog.jackson.configuration.JacksonConfigurer.metaInfServices()) {
+            if (!classes.contains(jc.getClass())) {
+                configurers.add(wrap(jc));
+                classes.add(jc.getClass());
+            }
+        }
+        for (com.mastfrog.jackson.JacksonConfigurer jc : metaInfServices()) {
+            Class<?> type;
+            if (jc instanceof WrapperJacksonConfigurer) {
+                type = ((WrapperJacksonConfigurer) jc).origType();
+            } else {
+                type = jc.getClass();
+            }
+            if (!classes.contains(type)) {
+                configurers.add(jc);
+            }
+        }
+        return this;
+    }
+
+    @SuppressWarnings("deprecation")
     public JacksonModule withJavaTimeSerializationMode(com.mastfrog.jackson.configuration.TimeSerializationMode timeMode, com.mastfrog.jackson.configuration.DurationSerializationMode durationMode) {
         if (timeMode == null) {
             throw new IllegalArgumentException("Null time mode");
@@ -99,100 +159,136 @@ public final class JacksonModule extends AbstractModule {
         if (durationMode == null) {
             throw new IllegalArgumentException("Null duration mode");
         }
-        for (Iterator<JacksonConfigurer> iter = configurers.iterator(); iter.hasNext();) {
-            JacksonConfigurer cf = iter.next();
-            if (cf instanceof JavaTimeConfigurer) {
+        for (Iterator<com.mastfrog.jackson.JacksonConfigurer> iter = configurers.iterator(); iter.hasNext();) {
+            com.mastfrog.jackson.JacksonConfigurer cf = iter.next();
+            if ("JavaTimeConfigurer".equals(cf.name())) {
                 iter.remove();
-                break;
-            } else if (WrapperJacksonConfigurer.wraps(cf, com.mastfrog.jackson.configuration.impl.JavaTimeConfigurer.class)) {
-                iter.remove();
-                break;
             }
         }
-        configurers.add(new JavaTimeConfigurer(TimeSerializationMode.forAlternate(timeMode),
-                DurationSerializationMode.forAlternate(durationMode)));
+        configurers.add(new com.mastfrog.jackson.JavaTimeConfigurer(com.mastfrog.jackson.TimeSerializationMode.forAlternate(timeMode),
+                com.mastfrog.jackson.DurationSerializationMode.forAlternate(durationMode)));
         return this;
     }
 
-    public JacksonModule withJavaTimeSerializationMode(TimeSerializationMode timeMode, DurationSerializationMode durationMode) {
+    @SuppressWarnings("deprecation")
+    public JacksonModule withJavaTimeSerializationMode(com.mastfrog.jackson.TimeSerializationMode timeMode, com.mastfrog.jackson.DurationSerializationMode durationMode) {
         if (timeMode == null) {
             throw new IllegalArgumentException("Null time mode");
         }
         if (durationMode == null) {
             throw new IllegalArgumentException("Null duration mode");
         }
-        for (Iterator<JacksonConfigurer> iter = configurers.iterator(); iter.hasNext();) {
-            JacksonConfigurer cf = iter.next();
-            if (cf instanceof JavaTimeConfigurer) {
+        for (Iterator<com.mastfrog.jackson.JacksonConfigurer> iter = configurers.iterator(); iter.hasNext();) {
+            com.mastfrog.jackson.JacksonConfigurer cf = iter.next();
+            if ("JavaTimeConfigurer".equals(cf.name())) {
                 iter.remove();
-                break;
-            } else if (WrapperJacksonConfigurer.wraps(cf, com.mastfrog.jackson.configuration.impl.JavaTimeConfigurer.class)) {
-                iter.remove();
-                break;
             }
         }
         configurers.add(new JavaTimeConfigurer(timeMode, durationMode));
         return this;
     }
 
-    private static JacksonConfigurer[] loadFromMetaInfServices() {
-        List<JacksonConfigurer> all = new ArrayList<>(10);
-        for (JacksonConfigurer c : ServiceLoader.load(JacksonConfigurer.class)) {
+    @SuppressWarnings("deprecation")
+    private static Collection<? extends com.mastfrog.jackson.JacksonConfigurer> metaInfServices() {
+        List<com.mastfrog.jackson.JacksonConfigurer> all = new ArrayList<>(10);
+        for (com.mastfrog.jackson.JacksonConfigurer c : ServiceLoader.load(com.mastfrog.jackson.JacksonConfigurer.class)) {
             all.add(c);
         }
         for (com.mastfrog.jackson.configuration.JacksonConfigurer c : com.mastfrog.jackson.configuration.JacksonConfigurer.metaInfServices()) {
             all.add(wrap(c));
         }
-        return all.toArray(new JacksonConfigurer[all.size()]);
+        return all;
     }
 
-    public JacksonModule withConfigurer(JacksonConfigurer configurer) {
-        if (configurer == null) {
-            throw new NullPointerException("configurer");
-        }
+    @SuppressWarnings("deprecation")
+    public JacksonModule withConfigurer(com.mastfrog.jackson.JacksonConfigurer configurer) {
+        prune(notNull("configurer", configurer).name());
         this.configurers.add(configurer);
         return this;
     }
 
     public JacksonModule withConfigurer(com.mastfrog.jackson.configuration.JacksonConfigurer configurer) {
-        if (configurer == null) {
-            throw new NullPointerException("configurer");
-        }
+        prune(notNull("configurer", configurer).name());
         this.configurers.add(wrap(configurer));
         return this;
     }
 
-    public JacksonModule withConfigurer(Class<? extends JacksonConfigurer> type) {
-        if (type == null) {
-            throw new NullPointerException("type");
-        }
-        if (!JacksonConfigurer.class.isAssignableFrom(type)) {
+    @SuppressWarnings("deprecation")
+    public JacksonModule withConfigurer(
+            Class<? extends com.mastfrog.jackson.JacksonConfigurer> type) {
+        if (!com.mastfrog.jackson.JacksonConfigurer.class.isAssignableFrom(notNull("type", type))) {
             throw new ClassCastException(type.getName() + " is not a subtype of " + JacksonConfigurer.class.getName());
         }
+        prune(type.getSimpleName());
         this.declarativeConfigurers.add(type);
         return this;
     }
 
-    @Override
-    protected void configure() {
-        List<Provider<? extends JacksonConfigurer>> configurers = new LinkedList<>();
-        for (Class<? extends JacksonConfigurer> type : declarativeConfigurers) {
-            Provider<? extends JacksonConfigurer> p = binder().getProvider(type);
-            configurers.add(p);
+    @SuppressWarnings("deprecation")
+    private void prune(String sn) {
+        for (Iterator<Class<? extends com.mastfrog.jackson.JacksonConfigurer>> it = declarativeConfigurers.iterator(); it.hasNext();) {
+            Class<? extends com.mastfrog.jackson.JacksonConfigurer> c = it.next();
+            if (sn.equals(c.getSimpleName())) {
+                it.remove();
+            }
         }
-        for (Class<? extends com.mastfrog.jackson.configuration.JacksonConfigurer> type : declarativeConfigurers2) {
-            Provider<? extends JacksonConfigurer> p = WrapperProvider.wrapperProvider(binder().getProvider(type));
-            configurers.add(p);
+        for (Iterator<Class<? extends com.mastfrog.jackson.configuration.JacksonConfigurer>> it = declarativeConfigurers2.iterator(); it.hasNext();) {
+            Class<? extends com.mastfrog.jackson.configuration.JacksonConfigurer> c = it.next();
+            if (sn.equals(c.getSimpleName())) {
+                it.remove();
+            }
         }
-        if (bindingName != null) {
-            bind(ObjectMapper.class).annotatedWith(Names.named(bindingName))
-                    .toProvider(new JacksonProvider(configurers));
-        } else {
-            bind(ObjectMapper.class).toProvider(new JacksonProvider(configurers));
+        for (Iterator<JacksonConfigurer> it = configurers.iterator(); it.hasNext();) {
+            com.mastfrog.jackson.JacksonConfigurer cf = it.next();
+            if (sn.equals(cf.name())) {
+                it.remove();
+            }
         }
     }
 
-    private static class WrapperProvider<T extends com.mastfrog.jackson.configuration.JacksonConfigurer> implements Provider<JacksonConfigurer> {
+    public JacksonModule withConfigurer2(Class<? extends com.mastfrog.jackson.configuration.JacksonConfigurer> type) {
+        if (type == null) {
+            throw new NullPointerException("type");
+        }
+        if (!com.mastfrog.jackson.configuration.JacksonConfigurer.class.isAssignableFrom(type)) {
+            throw new ClassCastException(type.getName() + " is not a subtype of " + com.mastfrog.jackson.configuration.JacksonConfigurer.class.getName());
+        }
+        prune(type.getSimpleName());
+        this.declarativeConfigurers2.add(type);
+        return this;
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    protected void configure() {
+        List<Provider<? extends com.mastfrog.jackson.JacksonConfigurer>> configurers = new LinkedList<>();
+        for (Class<? extends com.mastfrog.jackson.JacksonConfigurer> type : declarativeConfigurers) {
+            Provider<? extends com.mastfrog.jackson.JacksonConfigurer> p
+                    = binder().getProvider(type);
+            configurers.add(p);
+        }
+        for (Class<? extends com.mastfrog.jackson.configuration.JacksonConfigurer> type : declarativeConfigurers2) {
+            Provider<? extends com.mastfrog.jackson.JacksonConfigurer> p = WrapperProvider.wrapperProvider(binder().getProvider(type));
+            configurers.add(p);
+        }
+        JacksonProvider prov = new JacksonProvider(configurers);
+        if (bindingName != null) {
+            bind(ObjectMapper.class)
+                    .annotatedWith(Names.named(bindingName))
+                    .toProvider(prov);
+            // for tests
+            bind(JC.class)
+                    .annotatedWith(Names.named(bindingName))
+                    .toInstance(prov);
+        } else {
+            bind(ObjectMapper.class).toProvider(prov);
+            // for tests
+            bind(JC.class).toInstance(prov);
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private static class WrapperProvider<T extends com.mastfrog.jackson.configuration.JacksonConfigurer> implements Provider<com.mastfrog.jackson.JacksonConfigurer> {
 
         private final Provider<T> provider;
 
@@ -206,33 +302,54 @@ public final class JacksonModule extends AbstractModule {
         }
 
         @Override
-        public JacksonConfigurer get() {
+        @SuppressWarnings("deprecation")
+        public com.mastfrog.jackson.JacksonConfigurer get() {
             return wrap(provider.get());
         }
     }
 
     @Singleton
-    private class JacksonProvider implements Provider<ObjectMapper> {
+    @SuppressWarnings("deprecation")
+    class JacksonProvider implements Provider<ObjectMapper>, JC {
 
         private ObjectMapper mapper = new ObjectMapper();
         private final AtomicBoolean configured = new AtomicBoolean();
-        private final List<Provider<? extends JacksonConfigurer>> providers;
+        private @SuppressWarnings("deprecation")
+        final List<Provider<? extends com.mastfrog.jackson.JacksonConfigurer>> providers;
 
-        JacksonProvider(List<Provider<? extends JacksonConfigurer>> providers) {
+        @SuppressWarnings("deprecation")
+        JacksonProvider(List<Provider<? extends com.mastfrog.jackson.JacksonConfigurer>> providers) {
             this.providers = providers;
         }
 
+        public List<com.mastfrog.jackson.JacksonConfigurer> configurers() {
+            List<com.mastfrog.jackson.JacksonConfigurer> result = new ArrayList<>(configurers);
+            for (Provider<? extends com.mastfrog.jackson.JacksonConfigurer> provider : providers) {
+                com.mastfrog.jackson.JacksonConfigurer p = provider.get();
+                result.add(p);
+            }
+            return result;
+        }
+
         @Override
+        @SuppressWarnings("deprecation")
         public ObjectMapper get() {
             if (configured.compareAndSet(false, true)) {
-                for (JacksonConfigurer config : configurers) {
+                for (com.mastfrog.jackson.JacksonConfigurer config : configurers()) {
                     mapper = config.configure(mapper);
                 }
-                for (Provider<? extends JacksonConfigurer> provider : providers) {
-                    mapper = provider.get().configure(mapper);
-                }
             }
-            return mapper;
+            return mapper.copy();
         }
+    }
+
+    // for tests, we need a way to grab the concrete JacksonProvider instance,
+    // which the injector will wrap
+    interface JC {
+
+        @SuppressWarnings("deprecation")
+        List<com.mastfrog.jackson.JacksonConfigurer> configurers();
+
+        public ObjectMapper get();
     }
 }

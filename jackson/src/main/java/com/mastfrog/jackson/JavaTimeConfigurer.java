@@ -50,8 +50,18 @@ public class JavaTimeConfigurer implements JacksonConfigurer {
     }
 
     @Override
+    public String name() {
+        return delegate.name();
+    }
+
+    @Override
     public ObjectMapper configure(ObjectMapper mapper) {
         return delegate.configure(mapper);
+    }
+
+    @Override
+    public String toString() {
+        return "JTC(" + delegate + ")";
     }
 
 }
