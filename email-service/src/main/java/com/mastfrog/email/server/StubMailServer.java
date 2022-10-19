@@ -3,8 +3,8 @@ package com.mastfrog.email.server;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.mastfrog.giulius.Dependencies;
-import com.mastfrog.giulius.ShutdownHookRegistry;
 import com.mastfrog.settings.Settings;
+import com.mastfrog.shutdown.hooks.ShutdownHookRegistry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -127,7 +127,7 @@ class StubMailServer implements EmailServerService {
         boolean isShutdown() {
             return shutdown;
         }
-        
+
         private <E extends Email> void doOne(EmailAndListener<E> emailAndListener) {
             PublishListener<E> listener = emailAndListener.getListener();
             E email = emailAndListener.getEmail();
@@ -140,7 +140,7 @@ class StubMailServer implements EmailServerService {
                 return;
             }
         }
-        
+
         private <E extends Email> void sendOneEmail(EmailAndListener<E> l) {
             sendOneEmail(l.email, l.listener);
         }

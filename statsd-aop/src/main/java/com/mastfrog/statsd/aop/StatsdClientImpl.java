@@ -1,13 +1,13 @@
 package com.mastfrog.statsd.aop;
 
 import com.google.inject.Inject;
-import com.mastfrog.giulius.ShutdownHookRegistry;
 import com.mastfrog.settings.Settings;
+import com.mastfrog.shutdown.hooks.ShutdownHookRegistry;
 import static com.mastfrog.statsd.aop.StatsdModule.SETTINGS_KEY_STATSD_TIME_TO_LIVE;
+import com.mastfrog.util.thread.QuietAutoCloseable;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
 import javax.inject.Named;
-import com.mastfrog.util.thread.QuietAutoCloseable;
 
 /**
  * Implements a real statsd client

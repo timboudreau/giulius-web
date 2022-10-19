@@ -23,18 +23,19 @@
  */
 package com.mastfrog.statistics;
 
-import com.mastfrog.util.perf.Benchmark;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.util.Providers;
-import com.mastfrog.giulius.ShutdownHookRegistry;
 import com.mastfrog.giulius.annotations.Defaults;
 import com.mastfrog.settings.RefreshInterval;
-import com.mastfrog.settings.SettingsRefreshInterval;
 import com.mastfrog.settings.Settings;
+import com.mastfrog.settings.SettingsRefreshInterval;
+import com.mastfrog.shutdown.hooks.ShutdownHookRegistry;
+import static com.mastfrog.shutdown.hooks.ShutdownHookRegistry.shutdownHookRegistry;
+import com.mastfrog.util.perf.Benchmark;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.InvocationTargetException;
@@ -85,7 +86,7 @@ public final class JmxAopModule extends AbstractModule {
         bind(SettingsBeanBinder.class).asEagerSingleton();
         if (enableUdp) {
             try {
-                bind(UDPBroadcaster.class).toInstance(broadcaster = new UDPBroadcaster("224.0.0.1", 43124, ShutdownHookRegistry.get()));
+                bind(UDPBroadcaster.class).toInstance(broadcaster = new UDPBroadcaster("224.0.0.1", 43124, shutdownHookRegistry()));
             } catch (UnknownHostException ex) {
                 Logger.getLogger(JmxAopModule.class.getName()).log(Level.SEVERE, null, ex);
             } catch (SocketException ex) {

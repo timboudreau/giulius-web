@@ -10,14 +10,15 @@ import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.mastfrog.giulius.Dependencies;
-import com.mastfrog.giulius.ShutdownHookRegistry;
 import com.mastfrog.giulius.annotations.Defaults;
 import com.mastfrog.settings.Settings;
+import com.mastfrog.shutdown.hooks.ShutdownHookRegistry;
 import static com.mastfrog.statsd.aop.StatsdModule.SETTINGS_KEY_STATSD_HOST;
 import static com.mastfrog.statsd.aop.StatsdModule.SETTINGS_KEY_STATSD_PORT;
 import static com.mastfrog.statsd.aop.StatsdModule.SETTINGS_KEY_STATSD_PREFIX;
 import static com.mastfrog.statsd.aop.StatsdModule.SETTINGS_KEY_STATSD_TIME_TO_LIVE;
 import com.mastfrog.util.preconditions.ConfigurationError;
+import com.mastfrog.util.thread.QuietAutoCloseable;
 import java.lang.reflect.AnnotatedElement;
 import java.time.Duration;
 import java.util.HashSet;
@@ -28,7 +29,6 @@ import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import com.mastfrog.util.thread.QuietAutoCloseable;
 
 /**
  * Provides some Guice/AOP goodness to the standard Statsd client.
