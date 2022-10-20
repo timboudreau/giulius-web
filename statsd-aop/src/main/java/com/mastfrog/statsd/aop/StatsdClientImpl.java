@@ -1,10 +1,10 @@
 package com.mastfrog.statsd.aop;
 
 import com.google.inject.Inject;
+import com.mastfrog.function.misc.QuietAutoClosable;
 import com.mastfrog.settings.Settings;
 import com.mastfrog.shutdown.hooks.ShutdownHookRegistry;
 import static com.mastfrog.statsd.aop.StatsdModule.SETTINGS_KEY_STATSD_TIME_TO_LIVE;
-import com.mastfrog.util.thread.QuietAutoCloseable;
 import com.timgroup.statsd.NonBlockingStatsDClient;
 import com.timgroup.statsd.StatsDClient;
 import javax.inject.Named;
@@ -73,7 +73,7 @@ final class StatsdClientImpl implements StatsdClient, Runnable {
     }
 
     @Override
-    public QuietAutoCloseable benchmark(final String string) {
+    public QuietAutoClosable benchmark(final String string) {
         return new Timer(string, this);
     }
 
@@ -115,7 +115,7 @@ final class StatsdClientImpl implements StatsdClient, Runnable {
         }
     }
 
-    private static final class Timer implements QuietAutoCloseable {
+    private static final class Timer implements QuietAutoClosable {
 
         private final String name;
         private final long now = System.currentTimeMillis();

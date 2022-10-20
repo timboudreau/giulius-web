@@ -1,7 +1,7 @@
 package com.mastfrog.statsd.aop;
 
 import com.google.inject.ImplementedBy;
-import com.mastfrog.util.thread.QuietAutoCloseable;
+import com.mastfrog.function.misc.QuietAutoClosable;
 
 /**
  * A Statsd client - really a wrapper for one.
@@ -19,7 +19,7 @@ public interface StatsdClient {
      * @return An AutoCloseable which does not throw an exception in its close()
      * method and which automatically records the timing
      */
-    QuietAutoCloseable benchmark(final String string);
+    QuietAutoClosable benchmark(final String string);
 
     /**
      * Set a counter

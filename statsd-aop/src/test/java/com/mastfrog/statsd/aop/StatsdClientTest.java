@@ -1,6 +1,7 @@
 package com.mastfrog.statsd.aop;
 
 import com.google.common.collect.Maps;
+import com.mastfrog.function.misc.QuietAutoClosable;
 import com.mastfrog.giulius.tests.GuiceRunner;
 import com.mastfrog.giulius.tests.TestWith;
 import com.mastfrog.settings.Settings;
@@ -17,7 +18,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import com.mastfrog.util.thread.QuietAutoCloseable;
 
 /**
  *
@@ -158,7 +158,7 @@ public class StatsdClientTest {
             return in == null ? -1 : in.get();
         }
 
-        public QuietAutoCloseable benchmark(String string) {
+        public QuietAutoClosable benchmark(String string) {
             return new Timer(string, this);
         }
 
@@ -221,7 +221,7 @@ public class StatsdClientTest {
             }
         }
 
-        private static final class Timer implements QuietAutoCloseable {
+        private static final class Timer implements QuietAutoClosable {
 
             private final String name;
             private final long now = System.currentTimeMillis();

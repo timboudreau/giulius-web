@@ -9,6 +9,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
+import com.mastfrog.function.misc.QuietAutoClosable;
 import com.mastfrog.giulius.Dependencies;
 import com.mastfrog.giulius.annotations.Defaults;
 import com.mastfrog.settings.Settings;
@@ -18,7 +19,6 @@ import static com.mastfrog.statsd.aop.StatsdModule.SETTINGS_KEY_STATSD_PORT;
 import static com.mastfrog.statsd.aop.StatsdModule.SETTINGS_KEY_STATSD_PREFIX;
 import static com.mastfrog.statsd.aop.StatsdModule.SETTINGS_KEY_STATSD_TIME_TO_LIVE;
 import com.mastfrog.util.preconditions.ConfigurationError;
-import com.mastfrog.util.thread.QuietAutoCloseable;
 import java.lang.reflect.AnnotatedElement;
 import java.time.Duration;
 import java.util.HashSet;
@@ -250,7 +250,7 @@ public class StatsdModule extends AbstractModule implements StatsdConfig<StatsdM
                     client.decrement(metric.value());
                     return invocation.proceed();
                 case TIME:
-                    try (QuietAutoCloseable c = client.benchmark(metric.value())) {
+                    try (QuietAutoClosable c = client.benchmark(metric.value())) {
                         return invocation.proceed();
                     }
                 case CONCURRENCY:

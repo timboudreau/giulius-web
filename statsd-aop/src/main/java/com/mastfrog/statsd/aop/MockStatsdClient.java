@@ -1,16 +1,16 @@
 package com.mastfrog.statsd.aop;
 
-import com.mastfrog.util.thread.QuietAutoCloseable;
+import com.mastfrog.function.misc.QuietAutoClosable;
 
 /**
  * Mock implementation
  *
  * @author Tim Boudreau
  */
-class MockStatsdClient implements StatsdClient, QuietAutoCloseable {
+class MockStatsdClient implements StatsdClient, QuietAutoClosable {
 
     @Override
-    public QuietAutoCloseable benchmark(String string) {
+    public QuietAutoClosable benchmark(String string) {
         return this;
     }
 
