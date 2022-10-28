@@ -27,10 +27,6 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>giulius-annotations</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>giulius-annotation-processors</artifactId>
             <scope>compile</scope>
         </dependency>
