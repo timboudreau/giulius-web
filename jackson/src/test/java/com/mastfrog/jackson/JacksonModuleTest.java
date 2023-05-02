@@ -27,7 +27,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.mastfrog.giulius.tests.GuiceRunner;
-import com.mastfrog.giulius.tests.TestWith;
+import com.mastfrog.giulius.tests.anno.TestWith;
 import com.mastfrog.jackson.JacksonModuleTest.HttpStringIsoDurationModule;
 import com.mastfrog.jackson.JacksonModuleTest.IsoStringTimeSerializationConfigModule;
 import com.mastfrog.jackson.JacksonModuleTest.MillisTimeSerializationConfigModule;

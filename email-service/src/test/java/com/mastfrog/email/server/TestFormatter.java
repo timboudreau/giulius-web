@@ -1,7 +1,7 @@
 package com.mastfrog.email.server;
 
 import com.mastfrog.giulius.tests.GuiceRunner;
-import com.mastfrog.giulius.tests.TestWith;
+import com.mastfrog.giulius.tests.anno.TestWith;
 import com.mastfrog.util.collections.MapBuilder;
 import java.util.Map;
 import static org.junit.Assert.assertTrue;
